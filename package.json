@@ -1,0 +1,11 @@
+{
+  "name": "moonwell-ai",
+  "private": true,
+  "description": "Moonwell AI — CLI, skill, and landing page",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:web": "pnpm --filter @moonwell-ai/web dev",
+    "typecheck": "pnpm --filter @moonwell-fi/cli typecheck",
+    "test": "pnpm --filter @moonwell-fi/cli test"
+  }
+}
