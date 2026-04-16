@@ -202,6 +202,8 @@ export async function prepareLendAction(
   return {
     operation: verb,
     chain: caip2(chainId),
+    chainId,
+    from,
     transactions,
     requirements,
     preview: {

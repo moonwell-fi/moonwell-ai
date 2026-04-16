@@ -57,3 +57,7 @@ Two `'use client'` components in `src/app/components/`:
 
 Everything else in `page.tsx` is a server component.
 
+## Security headers
+
+The page is fully static — no user input, no XSS sinks, no auth — so CSP and baseline security headers are enforced at the edge (Cloudflare / Vercel) rather than in `next.config.ts`. If you ever add form input or third-party scripts, revisit and add a `Content-Security-Policy` either at the edge or via `headers()` in `next.config.ts`.
+

@@ -73,12 +73,19 @@ moonwell supply --asset USDC --amount-decimal 100 --from 0xYourAddress --json | 
 
 The `submit` command resolves signing keys in this order:
 
-1. `--private-key <hex>` flag
+1. `--private-key <hex>` flag — **advanced / scripted use only**
 2. `MOONWELL_PRIVATE_KEY` env var
 3. `MOONWELL_PRIVATE_KEY_FILE` env var (path to file)
-4. `~/.moonwell-cli/key.hex` file
+4. `~/.moonwell-cli/key.hex` file (must be `chmod 600`)
 
 Keys must be 0x-prefixed 64-character hex strings.
+
+### Security notes
+
+- **Avoid `--private-key` for interactive use.** Passing a key on the command line exposes it to shell history, `ps` output, CI logs, and anything else that captures the process table. Use the env var or key file for interactive work; reserve the flag for short-lived scripted contexts that manage the process table.
+- **Key files must be owner-only.** The loader rejects key files with group/world permissions. Run `chmod 600 ~/.moonwell-cli/key.hex` (and `chmod 700` on the directory).
+- **Submit enforces signer and chain binding.** `submit` refuses to sign a `PrepareResult` if the resolved signer address does not match the `from` used during prepare, or if `--chain` points at a different network than the prepared one.
+- **Submit whitelists transaction targets.** Every tx is verified to target the Moonwell Comptroller, a listed mToken, or an mToken underlying (for approvals) before signing.
 
 ## Architecture
 

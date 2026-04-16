@@ -36,6 +36,8 @@ export interface SimulationResult {
 export interface PrepareResult {
   operation: LendVerb;
   chain: string;
+  chainId: number;
+  from: Address;
   transactions: UnsignedTx[];
   requirements: string[];
   preview: {

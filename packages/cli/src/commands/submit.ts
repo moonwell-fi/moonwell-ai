@@ -3,7 +3,11 @@ import ora from "ora";
 import {
   createPublicClient,
   http,
+  type Address,
   type Hash,
+  type PublicClient,
+  type Transport,
+  type Chain,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { resolveChain } from "../lib/chains.js";
@@ -11,6 +15,8 @@ import { resolvePrivateKey, addressFromKey } from "../lib/signer.js";
 import { isJsonMode, envelope, errorEnvelope, printJson, printError } from "../lib/output.js";
 import { header, footer, labelValue, c } from "../lib/format.js";
 import { exitCode, usage } from "../lib/errors.js";
+import { getContracts } from "../lib/contracts.js";
+import { comptrollerAbi, mTokenAbi } from "../lib/abis.js";
 import type { GlobalOptions, PrepareResult } from "../lib/types.js";
 
 interface SubmitOptions extends GlobalOptions {
@@ -41,16 +47,41 @@ export function registerSubmit(program: Command): void {
           throw usage("No transactions to submit");
         }
 
-        // Determine chain from the PrepareResult
-        const chainId = prepareResult.transactions[0].chainId;
-        const chainStr = globalOpts.chain ?? chainId.toString();
-        const chain = resolveChain(chainStr);
+        // Signer binding: the signer must match the address used to prepare.
+        if (!prepareResult.from) {
+          throw usage(
+            "PrepareResult is missing 'from' field. Re-prepare with the current CLI version.",
+          );
+        }
+        if (prepareResult.from.toLowerCase() !== signerAddress.toLowerCase()) {
+          throw usage(
+            `Signer ${signerAddress} does not match prepared 'from' ${prepareResult.from}. ` +
+            `Refusing to sign transactions prepared for a different account.`,
+          );
+        }
+
+        // Chain binding: use the prepared chainId as the source of truth;
+        // reject any --chain override that points at a different network.
+        const chainId = prepareResult.chainId ?? prepareResult.transactions[0].chainId;
+        if (globalOpts.chain) {
+          const requestedChain = resolveChain(globalOpts.chain);
+          if (requestedChain.chainId !== chainId) {
+            throw usage(
+              `--chain ${globalOpts.chain} (id ${requestedChain.chainId}) does not match prepared chainId ${chainId}.`,
+            );
+          }
+        }
+        const chain = resolveChain(chainId.toString());
 
         const account = privateKeyToAccount(privateKey);
         const publicClient = createPublicClient({
           chain: chain.viemChain,
           transport: http(globalOpts.rpcUrl ?? chain.defaultRpcUrl),
         });
+
+        // Target whitelist: verify every tx.to is a known Moonwell contract
+        // (Comptroller, mToken, or underlying of an mToken for approve txs).
+        await verifyMoonwellTargets(prepareResult, publicClient, chainId);
 
         if (spinner) spinner.text = `Submitting ${prepareResult.transactions.length} transaction(s) from ${signerAddress}...`;
 
@@ -249,4 +280,65 @@ function readStdin(): Promise<string> {
     process.stdin.on("end", () => resolve(data));
     process.stdin.on("error", reject);
   });
+}
+
+/**
+ * Verify every transaction targets a known Moonwell contract on the chain:
+ *   - enter-market  → Comptroller
+ *   - approve       → underlying token of some listed mToken
+ *   - moonwell-*    → a listed mToken
+ *
+ * This prevents `submit` from being used as a generic raw-tx signer if the
+ * action file or piped JSON is tampered with between prepare and submit.
+ */
+async function verifyMoonwellTargets(
+  prepareResult: PrepareResult,
+  publicClient: PublicClient<Transport, Chain>,
+  chainId: number,
+): Promise<void> {
+  const contracts = getContracts(chainId);
+  const comptrollerAddr = contracts.comptroller.toLowerCase();
+
+  const markets = await publicClient.readContract({
+    address: contracts.comptroller,
+    abi: comptrollerAbi,
+    functionName: "getAllMarkets",
+  });
+
+  const underlyings = await publicClient.multicall({
+    contracts: (markets as Address[]).map((m) => ({
+      address: m,
+      abi: mTokenAbi,
+      functionName: "underlying" as const,
+    })),
+    allowFailure: true,
+  });
+
+  const mTokenSet = new Set((markets as Address[]).map((m) => m.toLowerCase()));
+  const underlyingSet = new Set<string>();
+  for (const r of underlyings) {
+    if (r.status === "success") {
+      underlyingSet.add((r.result as string).toLowerCase());
+    }
+  }
+
+  for (const tx of prepareResult.transactions) {
+    const to = tx.to.toLowerCase();
+    let valid = false;
+
+    if (tx.step === "approve") {
+      valid = underlyingSet.has(to);
+    } else if (tx.step === "enter-market") {
+      valid = to === comptrollerAddr;
+    } else if (tx.step.startsWith("moonwell-")) {
+      valid = mTokenSet.has(to);
+    }
+
+    if (!valid) {
+      throw usage(
+        `Refusing to sign: tx step "${tx.step}" targets ${tx.to}, ` +
+        `which is not a known Moonwell contract on chain ${chainId}.`,
+      );
+    }
+  }
 }
