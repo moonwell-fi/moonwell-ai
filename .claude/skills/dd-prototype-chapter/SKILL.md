@@ -10,11 +10,11 @@ Treat the page as an annotated demo surface. The interaction itself should carry
 
 ## Base System
 
-- background: `#fcfcfc`
-- soft rail/card background: `#f3f3f3`
-- primary text: `#171717`
-- secondary text: `#6f6f6f`
-- accent color: `#2474da`
+- background: `bg-background` (`#0f0d0e` — warm dark)
+- soft rail/card background: `bg-card` (`#1d1b1c`)
+- primary text: `text-foreground` (`#e5e2e3`)
+- secondary text: `text-muted` (`#887982`)
+- accent: `bg-accent` / `text-accent` (`#2474da`)
 - compact controls: circular or pill-shaped
 
 ## Layout
@@ -75,8 +75,8 @@ export function DDPrototypeChapter({
 
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,42rem)_minmax(360px,1fr)]">
-      <article className="space-y-6 text-[20px] leading-[1.9] text-[#171717]">
-        <p className="font-mono text-[13px] uppercase tracking-[0.18em] text-[#6f6f6f]">
+      <article className="space-y-6 text-[20px] leading-[1.9] text-foreground">
+        <p className="font-mono text-[13px] uppercase tracking-[0.18em] text-muted">
           Prototype
         </p>
         <h1 className="text-5xl tracking-[-0.04em]">
@@ -86,16 +86,16 @@ export function DDPrototypeChapter({
 
       <motion.aside
         layout
-        className="space-y-3 rounded-[28px] bg-[#f3f3f3] p-4"
+        className="space-y-3 rounded-[28px] bg-card p-4"
       >
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
-            <button className="h-9 rounded-full bg-white px-4 text-sm text-[#171717]">
+            <button className="h-9 rounded-full bg-card px-4 text-sm text-foreground">
               Live
             </button>
             <button
               onClick={() => setShowSource((value) => !value)}
-              className="h-9 rounded-full bg-white px-4 text-sm text-[#6f6f6f]"
+              className="h-9 rounded-full bg-card px-4 text-sm text-muted"
             >
               {showSource ? 'Hide code' : 'Show code'}
             </button>
@@ -106,7 +106,7 @@ export function DDPrototypeChapter({
           />
         </div>
 
-        <div className="rounded-[24px] bg-[#fcfcfc] p-4">{demo}</div>
+        <div className="rounded-[24px] bg-background p-4">{demo}</div>
 
         <AnimatePresence initial={false} mode="wait">
           {showSource && (
@@ -116,7 +116,7 @@ export function DDPrototypeChapter({
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               exit={{ opacity: 0, y: -4, filter: 'blur(8px)' }}
               transition={{ duration: 0.18 }}
-              className="overflow-x-auto rounded-[24px] bg-[#171717] px-4 py-3 text-sm text-[#f8f8f8]"
+              className="overflow-x-auto rounded-[24px] bg-background px-4 py-3 text-sm text-foreground"
             >
               <code>{source}</code>
             </motion.pre>

@@ -10,12 +10,12 @@ Design the page like a compact reference manual: practical, quiet, and slightly 
 
 ## Base System
 
-- background: `#fcfcfc`
-- card/background step: `#f3f3f3`
-- text: `#171717`
-- muted text: `#6f6f6f`
-- accent color: `#2474da`
-- standard card radius: `12px`
+- background: `bg-background` (`#0f0d0e` — warm dark)
+- card/background step: `bg-card` (`#1d1b1c`)
+- text: `text-foreground` (`#e5e2e3`)
+- muted text: `text-muted` (`#887982`)
+- accent: `bg-accent` / `text-accent` (`#2474da`)
+- standard card radius: `rounded-xl` (12px)
 
 ## Layout
 
@@ -72,20 +72,20 @@ export function DDResourcePage({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.35 }}
           transition={{ delay: index * 0.04, duration: 0.35 }}
-          className="rounded-[24px] bg-[#f3f3f3] p-5"
+          className="rounded-[24px] bg-card p-5"
         >
-          <p className="font-mono text-[13px] uppercase tracking-[0.18em] text-[#6f6f6f]">
+          <p className="font-mono text-[13px] uppercase tracking-[0.18em] text-muted">
             {section.label}
           </p>
-          <h2 className="mt-3 text-2xl text-[#171717]">{section.title}</h2>
+          <h2 className="mt-3 text-2xl text-foreground">{section.title}</h2>
 
           {section.code ? (
-            <pre className="mt-4 overflow-x-auto rounded-[18px] bg-[#171717] px-4 py-3 text-sm text-[#f8f8f8]">
+            <pre className="mt-4 overflow-x-auto rounded-[18px] bg-background px-4 py-3 text-sm text-foreground">
               <code>{section.code}</code>
             </pre>
           ) : (
-            <div className="mt-4 flex flex-wrap gap-2 text-sm text-[#6f6f6f]">
-              <kbd className="rounded-md bg-white px-2 py-1 text-[#171717]">
+            <div className="mt-4 flex flex-wrap gap-2 text-sm text-muted">
+              <kbd className="rounded-md bg-card px-2 py-1 text-foreground">
                 ⌘K
               </kbd>
               <span>Quick access pattern</span>

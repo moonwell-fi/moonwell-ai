@@ -67,21 +67,21 @@ export function DDMobileReading({
   media: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-xl space-y-6 px-5 py-6 text-[#171717]">
-      <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[#6f6f6f]">
+    <div className="mx-auto max-w-xl space-y-6 px-5 py-6 text-foreground">
+      <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-muted">
         Mobile chapter
       </p>
       <h1 className="text-[2.4rem] leading-[1.02] tracking-[-0.05em]">
         {title}
       </h1>
-      <p className="text-[16px] leading-8 text-[#171717]">{summary}</p>
+      <p className="text-[16px] leading-8 text-foreground">{summary}</p>
 
       <motion.div
         layout
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.28, ease: [0.23, 0.88, 0.26, 0.92] }}
-        className="overflow-hidden rounded-[24px] bg-[#f3f3f3] p-3 shadow-[0_8px_24px_rgba(23,23,23,0.05)]"
+        className="overflow-hidden rounded-[24px] bg-card p-3 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
       >
         {media}
       </motion.div>

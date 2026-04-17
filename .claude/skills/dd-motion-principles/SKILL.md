@@ -109,7 +109,7 @@ export function WeightedPullSurface() {
     <motion.div
       animate={{ y: open ? -180 : 0 }}
       transition={shellSpring}
-      className="w-[320px] rounded-[28px] bg-[#f3f3f3] p-4 shadow-[0_8px_30px_rgba(23,23,23,0.08)]"
+      className="w-[320px] rounded-[28px] bg-card p-4 shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
     >
       <motion.button
         drag="y"
@@ -123,12 +123,12 @@ export function WeightedPullSurface() {
           y.set(0);
         }}
         whileTap={{ scale: 0.99 }}
-        className="flex w-full items-center justify-between rounded-full bg-[#fcfcfc] px-4 py-3"
+        className="flex w-full items-center justify-between rounded-full bg-background px-4 py-3"
       >
         <motion.span
           animate={{ opacity: open ? 0.65 : 1, y: open ? -2 : 0 }}
           transition={{ duration: 0.18 }}
-          className="text-sm text-[#171717]"
+          className="text-sm text-foreground"
         >
           Pull to expand
         </motion.span>
@@ -149,7 +149,7 @@ export function WeightedPullSurface() {
           filter: open ? 'blur(0px)' : 'blur(4px)',
         }}
         transition={{ duration: open ? 0.24 : 0.14, delay: open ? 0.05 : 0 }}
-        className="px-2 pt-4 text-sm leading-6 text-[#6f6f6f]"
+        className="px-2 pt-4 text-sm leading-6 text-muted"
       >
         The panel commits only after real travel. Supporting copy settles after
         the shell.

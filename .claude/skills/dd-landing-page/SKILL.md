@@ -10,14 +10,14 @@ Design the page like a private field manual being sold to a design-aware audienc
 
 ## Base System
 
-- canvas: `#fcfcfc`
-- raised surfaces: `#f8f8f8`
-- card fill: `#f3f3f3`
-- primary text: `#171717`
-- secondary text: `#6f6f6f`
-- accent color: `#2474da`
-- card radius: `12px`
-- pill radius: `9999px`
+- canvas: `bg-background` (`#0f0d0e` — warm dark)
+- raised surfaces / card fill: `bg-card` (`#1d1b1c`)
+- hover card: `bg-card-hover` (`#332e30`)
+- primary text: `text-foreground` (`#e5e2e3`)
+- secondary text: `text-muted` (`#887982`)
+- accent: `bg-accent` / `text-accent` (`#2474da`)
+- card radius: `rounded-xl` (12px)
+- pill radius: `rounded-full`
 
 ## Typography
 
@@ -89,10 +89,10 @@ export function DDLandingPage({
   return (
     <section className="mx-auto max-w-[1200px] space-y-20 px-6 py-10">
       <div className="max-w-[44rem] space-y-6">
-        <p className="font-mono text-[13px] uppercase tracking-[0.18em] text-[#6f6f6f]">
+        <p className="font-mono text-[13px] uppercase tracking-[0.18em] text-muted">
           Devouring Details
         </p>
-        <h1 className="text-6xl leading-[0.98] tracking-[-0.05em] text-[#171717]">
+        <h1 className="text-6xl leading-[0.98] tracking-[-0.05em] text-foreground">
           Motion-literate product essays for design engineers.
         </h1>
         <motion.button
@@ -114,11 +114,11 @@ export function DDLandingPage({
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.35 }}
-            className="rounded-[24px] bg-[#f3f3f3] p-6 shadow-[0_8px_32px_rgba(23,23,23,0.05)]"
+            className="rounded-[24px] bg-card p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
           >
-            <p className="font-mono text-[13px] text-[#6f6f6f]">Chapter</p>
-            <h2 className="mt-3 text-2xl text-[#171717]">{chapter.title}</h2>
-            <p className="mt-4 text-[17px] leading-8 text-[#6f6f6f]">
+            <p className="font-mono text-[13px] text-muted">Chapter</p>
+            <h2 className="mt-3 text-2xl text-foreground">{chapter.title}</h2>
+            <p className="mt-4 text-[17px] leading-8 text-muted">
               {chapter.description}
             </p>
           </motion.article>

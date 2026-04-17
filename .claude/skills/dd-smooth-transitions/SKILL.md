@@ -102,11 +102,11 @@ export function SmoothStatusToggle() {
   return (
     <button
       onClick={() => setActive((value) => !value)}
-      className="rounded-full bg-[#f3f3f3] p-2"
+      className="rounded-full bg-card p-2"
     >
       <motion.div
         layout
-        className="flex items-center gap-3 rounded-full bg-white px-4 py-3"
+        className="flex items-center gap-3 rounded-full bg-card px-4 py-3"
       >
         <div className="relative h-5 w-5">
           <AnimatePresence initial={false} mode="wait">
@@ -123,7 +123,7 @@ export function SmoothStatusToggle() {
           </AnimatePresence>
         </div>
 
-        <div className="relative min-w-[7rem] text-left text-sm text-[#171717]">
+        <div className="relative min-w-[7rem] text-left text-sm text-foreground">
           <AnimatePresence initial={false} mode="wait">
             <motion.span
               key={active ? 'label-live' : 'label-idle'}
