@@ -17,6 +17,10 @@ export default function ExamplePrompts() {
             <span className="text-muted group-hover:text-foreground transition-colors duration-150">
               &ldquo;{s.prompt}&rdquo;
             </span>
+            <span
+              className="inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink"
+              aria-hidden="true"
+            />
           </button>
         );
       })}

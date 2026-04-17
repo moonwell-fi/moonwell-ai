@@ -43,14 +43,18 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div id="top" className="flex flex-col min-h-screen">
 
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <span className="font-mono text-sm font-medium">
+          <a
+            href="#top"
+            aria-label="Moonwell agents — back to top"
+            className="font-mono text-sm font-medium hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground"
+          >
             <span className="text-accent">agents</span>.moonwell.fi
-          </span>
+          </a>
           <div className="flex items-center gap-4 sm:gap-6 text-sm text-muted">
             <a href="#capabilities" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Capabilities</a>
             <a href="#install" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Install</a>

@@ -80,6 +80,7 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uContour;
   uniform vec3 uAccent;
   uniform float uDensity;
+  uniform vec2 uCursor;
 
   void main() {
     // Contour bands from elevation
@@ -97,11 +98,16 @@ const fragmentShader = /* glsl */ `
     float r = length(centered * vec2(1.3, 1.0));
     float edgeFade = smoothstep(0.58, 0.22, r);
 
+    // Cursor proximity — soft radial falloff in UV space
+    float d = distance(vUv, uCursor);
+    float hover = smoothstep(0.18, 0.0, d);
+
     vec3 col = uBg;
     col = mix(col, uContour, line * 0.55);
     col = mix(col, uAccent, line * focusBand * 0.9);
+    col = mix(col, uAccent, line * hover * 0.6);
 
-    float alpha = (line * 0.55 + line * focusBand * 0.45) * edgeFade;
+    float alpha = (line * 0.55 + line * focusBand * 0.45 + line * hover * 0.2) * edgeFade;
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -118,6 +124,7 @@ function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerR
       uContour: { value: new THREE.Color('#887982') },
       uAccent: { value: new THREE.Color('#2474da') },
       uDensity: { value: 9.0 },
+      uCursor: { value: new THREE.Vector2(-10, -10) },
     }),
     []
   );
@@ -127,10 +134,18 @@ function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerR
     if (!reduceMotion) {
       mat.current.uniforms.uTime.value += delta;
       const p = pointerRef.current;
-      const tx = p.x * 0.08;
-      const ty = p.y * 0.06;
-      mesh.current.rotation.x = THREE.MathUtils.lerp(mesh.current.rotation.x, -0.9 + ty, 0.05);
-      mesh.current.rotation.z = THREE.MathUtils.lerp(mesh.current.rotation.z, tx, 0.05);
+      // Sentinel (-10, -10) means no real pointer input yet — skip tilt + highlight.
+      if (p.x > -5 && p.y > -5) {
+        const tx = p.x * 0.08;
+        const ty = p.y * 0.06;
+        mesh.current.rotation.x = THREE.MathUtils.lerp(mesh.current.rotation.x, -0.9 + ty, 0.05);
+        mesh.current.rotation.z = THREE.MathUtils.lerp(mesh.current.rotation.z, tx, 0.05);
+        // NDC (-1..1) → screen UV (0..1). Y in pointerRef is already flipped
+        // so +1 = top of screen; UV has +1 = top, so no extra flip needed.
+        const cursor = mat.current.uniforms.uCursor.value as THREE.Vector2;
+        cursor.x = (p.x + 1) * 0.5;
+        cursor.y = (p.y + 1) * 0.5;
+      }
     }
   });
 
@@ -154,7 +169,9 @@ export default function LunarTerrain() {
   // Track the cursor in a ref so no React render happens on mouse move.
   // The Canvas is pointer-events-none, so r3f's built-in `mouse` never
   // updates; listen on window instead.
-  const pointerRef = useRef<Vec2>({ x: 0, y: 0 });
+  // Sentinel far off-screen so the cursor highlight stays dormant until a
+  // real pointermove event fires (avoids an always-on spot at page load).
+  const pointerRef = useRef<Vec2>({ x: -10, y: -10 });
 
   useEffect(() => {
     if (reduceMotion) return;
