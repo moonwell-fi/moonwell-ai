@@ -64,36 +64,38 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="relative flex flex-col items-center px-6 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
+      <section className="relative px-6 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
         <LunarTerrain />
-        <h1 className="relative text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.04em] text-center max-w-4xl leading-[1.02]">
-          Give your agent DeFi superpowers with{" "}
-          <span className="text-accent">Moonwell</span>.
-        </h1>
-        <p className="mt-8 max-w-xl text-center text-lg leading-relaxed text-muted">
-          A CLI and skill that lets any AI agent read Moonwell markets and prepare transactions. You sign.
-        </p>
+        <div className="relative z-10 flex flex-col items-center">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.04em] text-center max-w-4xl leading-[1.02]">
+            Give your agent DeFi superpowers with{" "}
+            <span className="text-accent">Moonwell</span>.
+          </h1>
+          <p className="mt-8 max-w-xl text-center text-lg leading-relaxed text-muted">
+            A CLI and skill that lets any AI agent read Moonwell markets and prepare transactions. You sign.
+          </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-sm sm:w-auto sm:max-w-none">
-          <CopySkillButton />
-          <a
-            href="#capabilities"
-            className="inline-flex items-center justify-center sm:justify-start gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground"
-          >
-            See capabilities <span aria-hidden="true">→</span>
-          </a>
-        </div>
+          <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-sm sm:w-auto sm:max-w-none">
+            <CopySkillButton />
+            <a
+              href="#capabilities"
+              className="inline-flex items-center justify-center sm:justify-start gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground"
+            >
+              See capabilities <span aria-hidden="true">→</span>
+            </a>
+          </div>
 
-        {/* Agent session terminal card — as editorial artifact */}
-        <div className="w-full max-w-2xl mt-16">
-          <div className="border border-border rounded-xl bg-card overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-background/60">
-              <div className="w-2.5 h-2.5 rounded-full bg-border" />
-              <div className="w-2.5 h-2.5 rounded-full bg-border" />
-              <div className="w-2.5 h-2.5 rounded-full bg-border" />
-              <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
+          {/* Agent session terminal card — as editorial artifact */}
+          <div className="w-full max-w-2xl mt-16">
+            <div className="border border-border rounded-xl bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-background/60">
+                <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
+              </div>
+              <TerminalDemo />
             </div>
-            <TerminalDemo />
           </div>
         </div>
       </section>
