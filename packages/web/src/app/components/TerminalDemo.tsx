@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 import { RotateCw } from 'lucide-react';
 
 const COMMAND = 'check my yield opportunities on moonwell';
@@ -38,7 +38,11 @@ export default function TerminalDemo() {
   const [rowsShown, setRowsShown] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [runCount, setRunCount] = useState(0);
-  const [contentHeight, setContentHeight] = useState<number | null>(null);
+
+  // Animated height — driven by a spring that lives outside React so the
+  // per-frame interpolation never triggers a re-render.
+  const heightTarget = useMotionValue(176);
+  const height = useSpring(heightTarget, { stiffness: 200, damping: 28, mass: 0.9 });
 
   function schedule(fn: () => void, ms: number) {
     const id = setTimeout(fn, ms);
@@ -116,18 +120,26 @@ export default function TerminalDemo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runCount]);
 
-  // Measure content height so the shell can animate its own height via
-  // a real pixel value — avoids framer-motion's `layout` FLIP transform
-  // that otherwise distorts text and shadows.
+  // Measure content height and push it into the spring target. The spring
+  // interpolates to this value frame-by-frame outside the React tree so
+  // text never scales and the card never re-renders during the morph.
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
-    const update = () => setContentHeight(el.getBoundingClientRect().height);
+    const update = () => {
+      const h = Math.max(el.getBoundingClientRect().height, 176);
+      if (reduceMotion) {
+        heightTarget.jump(h);
+      } else {
+        heightTarget.set(h);
+      }
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduceMotion]);
 
   // Caret only trails the active typing. Once the command is submitted it
   // goes away; when the session settles, a fresh blank prompt gets it back.
@@ -139,14 +151,8 @@ export default function TerminalDemo() {
       ref={rootRef}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      animate={
-        contentHeight != null
-          ? { height: Math.max(contentHeight, 176) }
-          : undefined
-      }
-      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 28 }}
+      style={{ height }}
       className="relative font-mono text-sm overflow-hidden"
-      style={{ minHeight: '11rem' }}
     >
       {/* Screen-reader summary — renders full content instantly */}
       <p className="sr-only" aria-live="polite">
