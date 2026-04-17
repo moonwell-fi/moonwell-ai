@@ -219,9 +219,9 @@ export default function Home() {
               <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
                 <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
                   <span className="text-muted select-none" aria-hidden="true">$ </span>
-                  <span className="text-foreground">moonwell supply --asset USDC --amount-decimal 50 --from 0x... --json</span>
+                  <span className="text-foreground">moonwell supply --asset USDC --amount-decimal 100 --chain base --json --from 0x...</span>
                 </span>
-                <CopyButton text="moonwell supply --asset USDC --amount-decimal 50 --from 0x... --json" />
+                <CopyButton text="moonwell supply --asset USDC --amount-decimal 100 --chain base --json --from 0x" />
               </div>
             </div>
           </div>
