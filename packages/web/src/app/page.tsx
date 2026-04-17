@@ -215,11 +215,13 @@ export default function Home() {
                 <span className="select-none" aria-hidden="true">↳ </span>
                 Then prepare &amp; submit in one pipe
               </h3>
-              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-center gap-3">
-                <span className="flex-1 overflow-x-auto whitespace-nowrap">
+              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
+                <span className="flex-1 leading-6">
                   <span className="text-muted select-none" aria-hidden="true">$ </span>
                   <span className="text-foreground">moonwell supply --asset USDC --amount-decimal 50 --json</span>
-                  <span className="text-muted"> | </span>
+                  <span className="text-muted select-none" aria-hidden="true"> \</span>
+                  <br />
+                  <span className="text-muted select-none ml-4" aria-hidden="true">| </span>
                   <span className="text-foreground">moonwell submit</span>
                 </span>
                 <CopyButton text="moonwell supply --asset USDC --amount-decimal 50 --json | moonwell submit" />
