@@ -92,25 +92,27 @@ export default function Home() {
             </div>
             <div className="px-5 py-4 font-mono text-sm space-y-2">
               <div>
-                <span className="text-accent">❯</span>
-                <span className="text-foreground ml-2">check my yield opportunities on moonwell</span>
+                <span className="text-accent select-none" aria-hidden="true">❯ </span>
+                <span className="text-foreground">check my yield opportunities on moonwell</span>
               </div>
-              <div className="text-muted ml-4">↳ scanning Base markets&hellip;</div>
+              <div className="text-muted ml-4">
+                <span className="select-none" aria-hidden="true">↳ </span>scanning Base markets&hellip;
+              </div>
               <div className="space-y-1.5 ml-4 pt-1">
                 <div className="flex gap-2">
-                  <span className="text-green shrink-0">✓</span>
+                  <span className="text-green shrink-0 select-none" aria-hidden="true">✓</span>
                   <span className="text-foreground w-14">USDC</span>
                   <span className="text-accent w-20">8.2% APY</span>
                   <span className="text-muted">$42M TVL</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-green shrink-0">✓</span>
+                  <span className="text-green shrink-0 select-none" aria-hidden="true">✓</span>
                   <span className="text-foreground w-14">ETH</span>
                   <span className="text-accent w-20">3.1% APY</span>
                   <span className="text-muted">$18M TVL</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-green shrink-0">✓</span>
+                  <span className="text-green shrink-0 select-none" aria-hidden="true">✓</span>
                   <span className="text-foreground w-14">cbBTC</span>
                   <span className="text-accent w-20">4.7% APY</span>
                   <span className="text-muted">$9M TVL</span>
@@ -132,7 +134,7 @@ export default function Home() {
               key={prompt}
               className="bg-card/50 rounded-lg px-4 py-4 font-mono text-sm hover:bg-card transition-colors duration-150 cursor-default group"
             >
-              <span className="text-accent">❯ </span>
+              <span className="text-accent select-none" aria-hidden="true">❯ </span>
               <span className="text-muted group-hover:text-foreground transition-colors duration-150">&ldquo;{prompt}&rdquo;</span>
             </div>
           ))}
@@ -158,7 +160,7 @@ export default function Home() {
       </section>
 
       {/* Capabilities */}
-      <section id="capabilities" className="max-w-5xl mx-auto px-6 py-24 w-full">
+      <section id="capabilities" className="max-w-5xl mx-auto px-6 py-24 w-full scroll-mt-16">
         <div className="mb-10">
           <Eyebrow>Capabilities</Eyebrow>
         </div>
@@ -172,7 +174,7 @@ export default function Home() {
               <ul className="space-y-4 font-mono">
                 {group.items.map((item) => (
                   <li key={item.name} className="flex gap-2">
-                    <span className="text-accent text-sm shrink-0" aria-hidden="true">{">"}</span>
+                    <span className="text-accent text-sm shrink-0 select-none" aria-hidden="true">{">"}</span>
                     <div>
                       <span className="text-sm text-foreground">{item.name}</span>
                       <p className="text-xs text-muted mt-1 font-sans leading-relaxed">{item.desc}</p>
@@ -186,7 +188,7 @@ export default function Home() {
       </section>
 
       {/* Install */}
-      <section id="install" className="border-t border-border bg-card/30 py-24">
+      <section id="install" className="border-t border-border bg-card/30 py-24 scroll-mt-16">
         <div className="max-w-xl mx-auto px-6">
           <div className="mb-10">
             <Eyebrow>Install</Eyebrow>
@@ -196,7 +198,8 @@ export default function Home() {
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Share with your agent</h3>
               <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-center gap-3">
                 <span className="flex-1 overflow-x-auto">
-                  <span className="text-muted">{">"} </span>curl
+                  <span className="text-muted select-none" aria-hidden="true">$ </span>
+                  <span className="text-foreground">curl</span>
                   <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
                 </span>
                 <CopyButton text="curl https://agents.moonwell.fi/skill.md" />
@@ -207,7 +210,7 @@ export default function Home() {
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Or install the CLI</h3>
               <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-center gap-3">
                 <span className="flex-1">
-                  <span className="text-muted">$ </span><span className="text-foreground">npm install @moonwell-fi/cli</span>
+                  <span className="text-muted select-none" aria-hidden="true">$ </span><span className="text-foreground">npm install @moonwell-fi/cli</span>
                 </span>
                 <CopyButton text="npm install @moonwell-fi/cli" />
               </div>
