@@ -126,7 +126,7 @@ export default function TerminalDemo() {
 
     if (reduceMotion) {
       setPhase('complete');
-      setTyped(next.command);
+      setTyped(next.prompt);
       setRowsShown(next.rows.length);
       return;
     }
@@ -138,7 +138,7 @@ export default function TerminalDemo() {
     setPhase('typing');
     let i = 0;
     const typeNext = () => {
-      if (i >= next.command.length) {
+      if (i >= next.prompt.length) {
         schedule(() => setPhase('scanning'), 420);
         schedule(() => {
           setPhase('results');
@@ -153,8 +153,8 @@ export default function TerminalDemo() {
         }, 420 + 900);
         return;
       }
-      const ch = next.command[i];
-      setTyped(next.command.slice(0, i + 1));
+      const ch = next.prompt[i];
+      setTyped(next.prompt.slice(0, i + 1));
       i += 1;
       schedule(typeNext, typingDelay(ch));
     };
@@ -234,7 +234,7 @@ export default function TerminalDemo() {
     >
       {phase === 'complete' && (
         <p className="sr-only" aria-live="polite">
-          {`Terminal: ${script.command}. ${script.scanLine}.`}
+          {`Prompt: ${script.prompt}. ${script.scanLine}.`}
         </p>
       )}
 

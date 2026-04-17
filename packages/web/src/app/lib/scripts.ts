@@ -55,15 +55,14 @@ export const SCRIPTS: Record<string, Script> = {
   rates: {
     id: 'rates',
     prompt: 'Compare USDC supply rates on Base and Optimism',
-    command: 'moonwell rates --asset USDC --chain base',
-    scanLine: 'Fetching rates',
+    command: 'moonwell rates --asset USDC --chain base && moonwell rates --asset USDC --chain optimism',
+    scanLine: 'Fetching rates on base, optimism',
     rows: [
       { type: 'asset', text: 'USDC · base' },
       { type: 'kv', key: 'Supply APY', value: '5.23%' },
       { type: 'kv', key: 'Borrow APY', value: '8.12%' },
       { type: 'kv', key: 'Utilization', value: '68.00%' },
       { type: 'blank' },
-      { type: 'cmd', text: 'moonwell rates --asset USDC --chain optimism' },
       { type: 'asset', text: 'USDC · optimism' },
       { type: 'kv', key: 'Supply APY', value: '4.82%' },
       { type: 'kv', key: 'Borrow APY', value: '7.63%' },

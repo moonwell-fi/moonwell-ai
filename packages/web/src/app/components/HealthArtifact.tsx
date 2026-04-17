@@ -1,4 +1,6 @@
-const COMMAND = 'moonwell health --address 0x...';
+// Natural-language prompt shown to the reader. The agent translates this
+// into: moonwell health --address 0x...
+const PROMPT = 'Check my health factor on Moonwell';
 
 const FIELDS: Array<[string, string, string?]> = [
   ['Address', '0x1234...abcd'],
@@ -28,7 +30,7 @@ export default function HealthArtifact() {
       <div className="px-5 py-4 font-mono text-sm space-y-0.5">
         <div className="leading-6 pl-[2ch] -indent-[2ch] mb-2">
           <span className="text-accent select-none" aria-hidden="true">❯ </span>
-          <span className="text-foreground">{COMMAND}</span>
+          <span className="text-foreground">{PROMPT}</span>
         </div>
 
         {FIELDS.map(([k, v, color]) => (

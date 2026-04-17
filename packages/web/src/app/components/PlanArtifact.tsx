@@ -1,5 +1,6 @@
-const COMMAND =
-  'moonwell supply --asset USDC --amount-decimal 100 --from 0x... --chain base';
+// Natural-language prompt shown to the reader. The agent translates this
+// into: moonwell supply --asset USDC --amount-decimal 100 --from 0x... --chain base
+const PROMPT = 'Supply 100 USDC to Moonwell on Base';
 
 const SUMMARY: Array<[string, string]> = [
   ['Asset', '100 USDC'],
@@ -39,7 +40,7 @@ export default function PlanArtifact() {
       <div className="px-5 py-4 font-mono text-sm space-y-0.5">
         <div className="leading-6 pl-[2ch] -indent-[2ch] mb-2">
           <span className="text-accent select-none" aria-hidden="true">❯ </span>
-          <span className="text-foreground">{COMMAND}</span>
+          <span className="text-foreground">{PROMPT}</span>
         </div>
 
         <div className="pl-2 text-foreground font-semibold">Supply — Base</div>
