@@ -120,8 +120,10 @@ export default function TerminalDemo() {
   const showReadyCaret = phase === 'complete';
 
   return (
-    <div
+    <motion.div
       ref={rootRef}
+      layout
+      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 28 }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       className="relative px-5 py-4 font-mono text-sm min-h-[11rem]"
@@ -245,7 +247,7 @@ export default function TerminalDemo() {
           </motion.button>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
