@@ -361,21 +361,28 @@ function PromptText({
   }
   return (
     <span className="text-foreground">
-      {Array.from(text).map((ch, idx) => (
-        <motion.span
-          // Key by runCount + idx so every rerun remounts each glyph.
-          key={`${runCount}-${idx}`}
-          initial={{ opacity: 0, filter: 'blur(4px)' }}
-          animate={{ opacity: 1, filter: 'blur(0px)' }}
-          transition={{
-            duration: 0.22,
-            delay: Math.min(idx * 0.012, 0.35),
-            ease: 'easeOut',
-          }}
-        >
-          {ch === ' ' ? '\u00A0' : ch}
-        </motion.span>
-      ))}
+      {Array.from(text).map((ch, idx) => {
+        // Render real spaces as plain text nodes (not wrapped in a motion.span)
+        // so the browser can break the line at those positions on narrow
+        // viewports. Non-space characters get their per-char blur-fade.
+        if (ch === ' ') {
+          return <span key={`${runCount}-${idx}-sp`}>{' '}</span>;
+        }
+        return (
+          <motion.span
+            key={`${runCount}-${idx}`}
+            initial={{ opacity: 0, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, filter: 'blur(0px)' }}
+            transition={{
+              duration: 0.22,
+              delay: Math.min(idx * 0.012, 0.35),
+              ease: 'easeOut',
+            }}
+          >
+            {ch}
+          </motion.span>
+        );
+      })}
     </span>
   );
 }
