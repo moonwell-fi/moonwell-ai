@@ -106,7 +106,7 @@ export default function Home() {
       {/* Example prompts */}
       <section className="max-w-3xl mx-auto px-6 pb-24 w-full">
         <div className="mb-6">
-          <Eyebrow>Try asking — click to run</Eyebrow>
+          <Eyebrow>Try asking</Eyebrow>
         </div>
         <ExamplePrompts />
       </section>

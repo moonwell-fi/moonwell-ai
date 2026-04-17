@@ -199,11 +199,6 @@ export default function TerminalDemo() {
   }, [run, script]);
 
   useEffect(() => {
-    if (runCount === 0) return;
-    run(script, { rerun: true });
-  }, [runCount, run, script]);
-
-  useEffect(() => {
     const handler = (e: Event) => {
       const id = (e as CustomEvent<string>).detail;
       const next = SCRIPTS[id];
@@ -211,11 +206,12 @@ export default function TerminalDemo() {
       startedRef.current = true;
       setScript(next);
       setRunCount((n) => n + 1);
+      run(next, { rerun: true });
       rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
     window.addEventListener(RUN_SCRIPT_EVENT, handler);
     return () => window.removeEventListener(RUN_SCRIPT_EVENT, handler);
-  }, []);
+  }, [run]);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -334,6 +330,7 @@ export default function TerminalDemo() {
             onClick={() => {
               startedRef.current = true;
               setRunCount((n) => n + 1);
+              run(script, { rerun: true });
             }}
             aria-label="Rerun terminal demo"
             className="absolute bottom-3 right-3 inline-flex items-center justify-center h-7 w-7 rounded-md text-muted hover:text-accent transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"

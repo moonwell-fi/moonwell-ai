@@ -34,7 +34,7 @@ export default function ExamplePrompts() {
             <span
               className={`transition-colors duration-150 ${isSelected ? 'text-foreground' : 'text-muted group-hover:text-foreground'}`}
             >
-              &ldquo;{s.prompt}&rdquo;
+              {s.prompt}
             </span>
           </button>
         );
