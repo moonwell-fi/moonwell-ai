@@ -210,8 +210,11 @@ export default function Home() {
               </div>
             </div>
 
-            <div>
-              <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Prepare &amp; submit in one pipe</h3>
+            <div className="pt-2 mt-2 border-t border-border/40">
+              <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3 mt-4">
+                <span className="select-none" aria-hidden="true">↳ </span>
+                Then prepare &amp; submit in one pipe
+              </h3>
               <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-center gap-3">
                 <span className="flex-1 overflow-x-auto whitespace-nowrap">
                   <span className="text-muted select-none" aria-hidden="true">$ </span>
