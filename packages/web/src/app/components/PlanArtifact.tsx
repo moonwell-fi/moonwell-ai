@@ -23,10 +23,6 @@ function KV({ k, v, color = 'text-foreground' }: { k: string; v: string; color?:
   );
 }
 
-function Separator() {
-  return <div className="text-muted select-none" aria-hidden="true">{'─'.repeat(48)}</div>;
-}
-
 export default function PlanArtifact() {
   return (
     <div className="border border-border rounded-xl bg-card overflow-hidden">
@@ -43,8 +39,7 @@ export default function PlanArtifact() {
           <span className="text-foreground">{PROMPT}</span>
         </div>
 
-        <div className="pl-2 text-foreground font-semibold">Supply — Base</div>
-        <Separator />
+        <div className="pl-2 text-foreground font-semibold mb-1">Supply — Base</div>
 
         {SUMMARY.map(([k, v]) => (
           <KV key={k} k={k} v={v} />
@@ -63,8 +58,6 @@ export default function PlanArtifact() {
         <div>&nbsp;</div>
 
         <KV k="Simulation" v="Passed (gas: 185,000)" color="text-green" />
-
-        <Separator />
       </div>
     </div>
   );
