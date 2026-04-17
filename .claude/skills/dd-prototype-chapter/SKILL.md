@@ -14,7 +14,7 @@ Treat the page as an annotated demo surface. The interaction itself should carry
 - soft rail/card background: `#f3f3f3`
 - primary text: `#171717`
 - secondary text: `#6f6f6f`
-- orange accent: `#ff670d`
+- accent color: `#2474da`
 - compact controls: circular or pill-shaped
 
 ## Layout
@@ -41,7 +41,7 @@ Treat the page as an annotated demo surface. The interaction itself should carry
 
 - use quiet gray shells and thin contrast
 - diagrams and minimaps should be hairline and sparse
-- orange should identify the active state or focal marker
+- the accent color should identify the active state or focal marker
 
 ## Copy
 
@@ -102,7 +102,7 @@ export function DDPrototypeChapter({
           </div>
           <motion.div
             layoutId="dd-demo-dot"
-            className="h-2 w-2 rounded-full bg-[#ff670d]"
+            className="h-2 w-2 rounded-full bg-accent"
           />
         </div>
 

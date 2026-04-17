@@ -86,7 +86,7 @@ export function DDMobileReading({
         {media}
       </motion.div>
 
-      <button className="w-full rounded-full bg-[#ff670d] px-6 py-4 text-base font-medium text-white">
+      <button className="w-full rounded-full bg-accent px-6 py-4 text-base font-medium text-white">
         Continue reading
       </button>
     </div>

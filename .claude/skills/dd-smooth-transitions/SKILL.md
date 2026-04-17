@@ -116,7 +116,7 @@ export function SmoothStatusToggle() {
               animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
               exit={{ opacity: 0, scale: 0.96, filter: 'blur(10px)' }}
               transition={{ duration: active ? 0.18 : 0.14 }}
-              className="absolute inset-0 grid place-items-center text-[#ff670d]"
+              className="absolute inset-0 grid place-items-center text-accent"
             >
               {active ? '●' : '○'}
             </motion.span>

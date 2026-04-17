@@ -135,7 +135,7 @@ export function WeightedPullSurface() {
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={shellSpring}
-          className="text-[#ff670d]"
+          className="text-accent"
         >
           ↓
         </motion.span>

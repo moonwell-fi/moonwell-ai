@@ -198,7 +198,7 @@ export function MorphingFeedbackShell() {
       <motion.span
         layoutId="dd-active-dot"
         transition={reduceMotion ? { duration: 0 } : shellSpring}
-        className="absolute left-4 top-4 h-2 w-2 rounded-full bg-mamo-yellow-500"
+        className="absolute left-4 top-4 h-2 w-2 rounded-full bg-accent"
       />
 
       {/* Content: crossfade between keyed children */}
@@ -222,11 +222,11 @@ export function MorphingFeedbackShell() {
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
-                className="rounded-full bg-secondary px-4 py-2 text-sm text-muted-foreground"
+                className="rounded-full bg-card px-4 py-2 text-sm text-muted"
               >
                 Cancel
               </button>
-              <button className="rounded-full bg-mamo-yellow-500 px-4 py-2 text-sm text-foreground">
+              <button className="rounded-full bg-accent px-4 py-2 text-sm text-foreground">
                 Send
               </button>
             </div>
@@ -242,7 +242,7 @@ export function MorphingFeedbackShell() {
             className="flex h-full w-full items-center justify-between rounded-full px-4 text-sm text-foreground"
           >
             <span className="pl-4">Leave feedback</span>
-            <span className="text-muted-foreground">⌘K</span>
+            <span className="text-muted">⌘K</span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -260,4 +260,4 @@ export function MorphingFeedbackShell() {
 - fancy morphs with brittle caret or cursor behavior
 - unreliable shared-element tricks that break under real usage
 - `layoutId` on text elements (causes font rendering flicker)
-- raw hex colors — use Mamo theme tokens
+- raw hex colors — use Moonwell theme tokens

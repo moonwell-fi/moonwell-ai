@@ -1,6 +1,6 @@
 ---
 name: dd-landing-page
-description: Devouring Details landing page patterns. Auto-load when prompts mention a landing page, marketing page, hero, chapter preview grid, logo cloud, testimonials, FAQ, or a single oversized orange CTA in the DD style.
+description: Devouring Details landing page patterns. Auto-load when prompts mention a landing page, marketing page, hero, chapter preview grid, logo cloud, testimonials, FAQ, or a single oversized accent CTA in the DD style.
 argument-hint: [brief]
 ---
 
@@ -15,7 +15,7 @@ Design the page like a private field manual being sold to a design-aware audienc
 - card fill: `#f3f3f3`
 - primary text: `#171717`
 - secondary text: `#6f6f6f`
-- accent orange: `#ff670d`
+- accent color: `#2474da`
 - card radius: `12px`
 - pill radius: `9999px`
 
@@ -43,7 +43,7 @@ Design the page like a private field manual being sold to a design-aware audienc
 ## CTA
 
 - include one major CTA moment
-- orange background, white text, full pill shape
+- accent background, white text, full pill shape
 - make it the most emphatic object on the page
 - avoid multiple competing primary CTAs
 
@@ -57,7 +57,7 @@ Design the page like a private field manual being sold to a design-aware audienc
 
 - Build landing pages from vertical content sections, not a single hero blob with stacked marketing widgets.
 - Keep chapter cards data-driven so Claude can scale the grid without changing the visual system.
-- Treat the orange CTA as its own component with a dedicated size scale and motion treatment instead of a generic button variant.
+- Treat the accent CTA as its own component with a dedicated size scale and motion treatment instead of a generic button variant.
 - Animate section entry per block or per card. Do not cascade a giant page-wide motion effect across unrelated sections.
 
 ### React + Framer Motion Sample
@@ -99,7 +99,7 @@ export function DDLandingPage({
           whileHover={{ y: -1, scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          className="rounded-full bg-[#ff670d] px-8 py-4 text-lg font-medium text-white"
+          className="rounded-full bg-accent px-8 py-4 text-lg font-medium text-white"
         >
           Read the manual
         </motion.button>

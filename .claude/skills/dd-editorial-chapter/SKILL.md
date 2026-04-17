@@ -13,7 +13,7 @@ Build a reading-first surface with supporting media, not a docs portal and not a
 - background: `#fcfcfc`
 - primary text: `#171717`
 - secondary text: `#6f6f6f`
-- accent orange: `#ff670d`
+- accent color: `#2474da`
 - body copy on desktop should land near `20px / 38px`
 - section labels should use a narrow monospaced voice around `14px / 20px`
 
@@ -43,7 +43,7 @@ Build a reading-first surface with supporting media, not a docs portal and not a
 
 - hover should reveal supporting detail or labels
 - focus cues should be clean and obvious
-- orange should mark the important active state, not every interactive item
+- the accent color should mark the important active state, not every interactive item
 
 ## Tone
 

@@ -14,7 +14,7 @@ Design the page like a compact reference manual: practical, quiet, and slightly 
 - card/background step: `#f3f3f3`
 - text: `#171717`
 - muted text: `#6f6f6f`
-- accent orange: `#ff670d`
+- accent color: `#2474da`
 - standard card radius: `12px`
 
 ## Layout
@@ -41,7 +41,7 @@ Design the page like a compact reference manual: practical, quiet, and slightly 
 ## Visual Behavior
 
 - preserve the grayscale base
-- use orange only to mark active emphasis, important actions, or key annotations
+- use the accent color only to mark active emphasis, important actions, or key annotations
 - small monospaced section labels work well here
 
 ## Technical Details

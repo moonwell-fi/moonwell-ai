@@ -13,7 +13,7 @@ Use this surface when the user wants a public-facing sales or introduction page.
 
 ### Visual behavior
 
-- keep the Mamo token palette — mostly neutrals with accent moments using `bg-mamo-yellow-500`
+- keep the Moonwell token palette — mostly warm-dark neutrals with accent moments using `bg-accent` (Moonwell Blue)
 - use one major CTA moment per viewport
 - chapter preview cards should feel like artifact previews from a private archive
 
@@ -43,7 +43,7 @@ Use this for principle-style pages and other long-form instructional surfaces.
 
 ### Typography
 
-- section markers are `text-xs font-mono uppercase tracking-wider text-muted-foreground`
+- section markers are `text-xs font-mono uppercase tracking-wider text-muted`
 - paragraphs sit at roughly `text-lg leading-relaxed` to `text-xl leading-relaxed`
 - code snippets should be woven into the narrative instead of split into isolated docs sections
 
@@ -73,7 +73,7 @@ Use this when the surface teaches an interaction through a live demo.
 ### Implementation guidance
 
 - build the interaction first, then trim the chrome
-- use `bg-secondary` backgrounds so the animated element carries the attention
+- use `bg-card` backgrounds so the animated element carries the attention
 - if the demo explains a motion principle, show the effect clearly without extra ornament
 
 ## 4. Resource Chapter
@@ -125,7 +125,7 @@ Use these patterns across surfaces when they fit the task:
 Before finishing, check:
 
 - Does the page feel authored rather than assembled from components?
-- Is the palette using Mamo tokens consistently (no raw hex values)?
+- Is the palette using Moonwell tokens consistently (no raw hex values)?
 - Is the accent color used with discipline?
 - Is the reading rhythm generous enough?
 - Are controls compact and calm?

@@ -14,62 +14,59 @@ Design for:
 
 ## Token Mapping
 
-When building DD-style surfaces inside Mamo, map DD concepts to Mamo's existing design tokens. Do not introduce standalone hex values — use the project's CSS variables and Tailwind theme.
+When building DD-style surfaces in this project, map DD concepts to Moonwell's design tokens (defined in `packages/web/src/app/globals.css` via Tailwind v4's `@theme inline` block — see `packages/web/AGENTS.md`). Do not introduce standalone hex values.
+
+### Dark-only constraint
+
+Moonwell web has no light mode. DD's classic grayscale-on-light reading surface must adapt to Moonwell's warm dark palette. Neutrals come from `--background` (`#0f0d0e`) and `--card` (`#1d1b1c`); contrast stays restrained.
 
 ### Colors
 
-Map DD roles to Mamo tokens:
+Map DD roles to Moonwell tokens:
 
-- background: `bg-background` (CSS `--background`)
-- raised background: `bg-secondary` (CSS `--secondary`)
-- soft card background: `bg-card` (CSS `--card`)
-- subtle stroke: `border-border` (CSS `--border`)
-- secondary text: `text-muted-foreground` (CSS `--muted-foreground`)
-- primary text: `text-foreground` (CSS `--foreground`)
-- accent: use `bg-mamo-yellow-500` (`#f0fe9b`) as the DD accent in place of orange — it is Mamo's primary brand color
-- accent wash: `bg-mamo-yellow-500/10` for light washes
-- accent strong: `bg-mamo-yellow-400` for higher-contrast accent moments
-- success/positive states: `text-day-forest-500` / `bg-day-forest-50`
-- error/destructive states: `text-destructive` (CSS `--destructive`)
+- background: `bg-background` (`#0f0d0e` — warm dark)
+- raised surface / soft card: `bg-card` (`#1d1b1c`)
+- hover card surface: `bg-card-hover` (`#332e30`)
+- subtle stroke: `border-border` (`#3b3438`)
+- secondary text: `text-muted` (`#887982`)
+- primary text: `text-foreground` (`#e5e2e3`)
+- **Accent**: `bg-accent` / `text-accent` (`#2474da`, Moonwell Blue) — one strong accent moment per screen
+- accent wash: `bg-accent/10` for light washes
+- success/positive: `text-green` (`#42b34d`)
+- purple (rare, special-state): `text-purple` (`#ac10f4`)
 
-Do not use raw hex values. If a specific DD color has no Mamo equivalent, use the nearest semantic token and note the mapping in a comment.
+Do not use raw hex values. If a specific DD color has no Moonwell equivalent, use the nearest semantic token and note the mapping in a comment.
 
 ### Radius
 
-Use the project's radius scale from `globals.css`:
+Use Tailwind's default radius scale:
 
-- `rounded-sm`: `calc(var(--radius) - 4px)` — tiny inline keys or chips
-- `rounded-md`: `calc(var(--radius) - 2px)` — compact buttons and controls
-- `rounded-lg`: `var(--radius)` (10px) — cards, media shells, and demo containers
-- `rounded-xl`: `calc(var(--radius) + 4px)` — larger panels
+- `rounded-sm`: tiny inline keys or chips
+- `rounded-md`: compact buttons and controls
+- `rounded-lg`: cards, media shells, and demo containers
+- `rounded-xl`: larger panels
 - `rounded-full`: pill buttons and circular controls
 
 ### Shadow
 
-Use the project's shadow tokens:
-
-- subtle depth: `shadow-slider` (defined in `@theme`)
-- component glow: `drop-shadow-component` (orange-tinted, defined in `@theme`)
-- standard elevation: `shadow-xs`, `shadow-md`, `shadow-lg` from Tailwind
-
-Keep shadows soft and shallow. The DD aesthetic rarely uses deep elevation.
+Keep shadows soft and shallow. The DD aesthetic rarely uses deep elevation. Standard Tailwind `shadow-xs`, `shadow-sm`, `shadow-md` are sufficient. Avoid glowing drop shadows unless the accent moment explicitly calls for it.
 
 ## Typography
 
 ### Families
 
-- primary sans: `font-sans` — GT-America (defined in `globals.css`)
-- monospace: `font-mono` — GT-America-Mono (defined in `globals.css`)
-- no handwritten accents — Mamo does not ship Caveat; omit or substitute with `font-mono` italic if an annotation feel is needed
+- primary sans: `font-sans` — Geist Sans (`--font-geist-sans`, defined in `globals.css`)
+- monospace: `font-mono` — Geist Mono (`--font-geist-mono`, defined in `globals.css`)
+- no handwritten accents — substitute with `font-mono` italic if an annotation feel is needed
 
 ### Sizes
 
-Follow Tailwind's type scale, biased toward the sizes used across Mamo:
+Follow Tailwind's type scale:
 
-- section labels: `text-xs` or `text-sm`, `font-mono`, `text-muted-foreground`, `uppercase tracking-wider`
+- section labels: `text-xs` or `text-sm`, `font-mono`, `text-muted`, `uppercase tracking-wider`
 - body reading copy: `text-lg` or `text-xl` with generous `leading-relaxed`
 - UI default text: `text-sm` or `text-base`
-- big CTA: `text-3xl` to `text-5xl`, `tracking-tight`, on accent background
+- big CTA: `text-3xl` to `text-5xl`, `tracking-tight`
 - mobile CTA: `text-xl` to `text-2xl` with slightly tighter tracking
 
 ### Type behavior
@@ -101,19 +98,19 @@ Use Tailwind's 4px-based spacing scale. The DD pages feel hand-spaced, so prefer
 ### Controls
 
 - icon buttons are usually compact circles or rounded pills
-- inactive state uses `text-muted-foreground` / `bg-secondary`
-- active or focal states switch to accent (`bg-mamo-yellow-500`)
-- focus rings should be clean and obvious, using `ring-ring`
+- inactive state uses `text-muted` / `bg-card`
+- active or focal states switch to accent (`bg-accent`)
+- focus rings should be clean and obvious, using `focus-visible:outline-accent`
 
 ### CTA
 
 - reserve one oversized pill CTA per page
-- accent background (`bg-mamo-yellow-500`), `text-foreground`, full pill radius
+- `bg-accent`, `text-white`, full pill radius
 - strong horizontal padding with a second visual element aligned at the right edge when possible
 
 ### Media frames
 
-- use `bg-secondary` shells with a thin `border border-border`
+- use `bg-card` shells with a thin `border border-border`
 - prefer contained media with generous empty space around it
 - interactive demos can occupy their own rail and remain visible while the text scrolls
 
@@ -132,6 +129,7 @@ Use Tailwind's 4px-based spacing scale. The DD pages feel hand-spaced, so prefer
 - scrolling and pointer motion often affect nearby elements through proximity logic
 - velocity matters; the site favors motion that settles naturally rather than snapping
 - blur is used as a transitional material, not as a permanent style layer
+- always gate non-essential motion behind `prefers-reduced-motion`
 
 ## Illustration and Ornament
 
@@ -156,6 +154,7 @@ Do not introduce these unless the user explicitly asks:
 - thick borders everywhere
 - stacked KPI cards as the main visual language
 - default Tailwind typography without refinement
-- raw hex colors that bypass the Mamo token system
+- raw hex colors that bypass the Moonwell token system
 - overly playful illustrations
 - crowded nav systems
+- introducing a second competing accent color on the same surface

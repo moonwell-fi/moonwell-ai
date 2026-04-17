@@ -1,6 +1,6 @@
 ---
 name: devouring-details-design
-description: Devouring Details visual system and implementation playbook. Auto-load when prompts mention Devouring Details, devouringdetails.com, DD-style UI, editorial product surfaces, grayscale reading layouts, orange CTA moments, or restyling a page to match that aesthetic.
+description: Devouring Details visual system and implementation playbook. Auto-load when prompts mention Devouring Details, devouringdetails.com, DD-style UI, editorial product surfaces, grayscale reading layouts, accent CTA moments, or restyling a page to match that aesthetic.
 argument-hint: [brief]
 ---
 
@@ -10,7 +10,7 @@ Use this skill when the user wants the feel of Devouring Details, not a generic 
 
 Apply the style as a system, not as scattered decoration:
 
-- tokens first (mapped to Mamo's design system)
+- tokens first (mapped to Moonwell's design system — see `packages/web/AGENTS.md`)
 - typography second
 - layout third
 - motion and affordances last
@@ -28,19 +28,24 @@ The site feels like a design engineer's field manual:
 
 ## Token Strategy
 
-All DD surfaces built inside Mamo must use Mamo's existing design tokens. Do not introduce standalone hex values or a parallel token system.
+All DD surfaces in this project must use Moonwell's design tokens (defined in `packages/web/src/app/globals.css` via Tailwind v4 `@theme inline`). Do not introduce standalone hex values or a parallel token system.
 
-- Colors: use CSS variables from `globals.css` (`--background`, `--foreground`, `--card`, `--border`, `--muted-foreground`, etc.) and the Tailwind theme palette (`mamo-yellow`, `day-forest`, `deep-forest`, `lilah`)
-- Accent: `mamo-yellow-500` (`#f0fe9b`) replaces the DD orange. Use it with the same discipline — one strong moment per screen
-- Radius: `rounded-sm` through `rounded-xl` and `rounded-full` per the project's `--radius` scale
-- Shadows: `shadow-xs`, `shadow-md`, `shadow-lg`, `shadow-slider`, `drop-shadow-component`
-- Fonts: `font-sans` (GT-America) and `font-mono` (GT-America-Mono)
+- Colors: use CSS variables / Tailwind utilities from the Moonwell palette:
+  - `bg-background` (`#0f0d0e`), `text-foreground` (`#e5e2e3`)
+  - `bg-card` (`#1d1b1c`), `bg-card-hover` (`#332e30`)
+  - `border-border` (`#3b3438`), `text-muted` (`#887982`)
+  - `text-accent` / `bg-accent` (`#2474da` — Moonwell Blue, primary interactive; fills the DD accent role)
+  - `text-green` (`#42b34d`), `text-purple` (`#ac10f4`)
+- **Accent moment**: use `bg-accent` / `text-accent` (Moonwell Blue, `#2474da`) for the single strong accent per screen.
+- **Dark-only**: this project has no light mode. DD's classic grayscale-on-light reading layout must adapt — the reading surface is dark, neutrals are warm-dark, and accent contrast still stays restrained.
+- Radius: Tailwind defaults (`rounded-sm` through `rounded-xl`, `rounded-full`).
+- Fonts: `font-sans` (Geist Sans via `--font-geist-sans`) and `font-mono` (Geist Mono via `--font-geist-mono`).
 
 See [foundation.md](foundation.md) for the complete token mapping.
 
 ## Non-Negotiables
 
-- Use Mamo's token system exclusively — no raw hex values that bypass the theme.
+- Use Moonwell's token system exclusively — no raw hex values that bypass the theme.
 - Use the accent color as the primary emphasis. Do not introduce a second dominant accent unless the task explicitly needs a semantic state.
 - Keep section headings small, monospaced (`font-mono`), and quiet.
 - Keep body copy large enough to feel authored, not app-default.
@@ -52,8 +57,8 @@ See [foundation.md](foundation.md) for the complete token mapping.
 ## Typography Rules
 
 - Main reading text should feel like authored prose, not utility copy. Use `text-lg leading-relaxed` or larger.
-- Small structural labels should use `font-mono text-xs uppercase tracking-wider text-muted-foreground`.
-- Code examples should use `font-mono` and sit on very low-contrast containers (`bg-secondary`).
+- Small structural labels should use `font-mono text-xs uppercase tracking-wider text-muted`.
+- Code examples should use `font-mono` and sit on very low-contrast containers (`bg-card`).
 - Large CTA text can be oversized and slightly tight-tracked, but reserve that move for one moment per screen.
 
 ## Interaction Rules
@@ -72,13 +77,13 @@ See [foundation.md](foundation.md) for the complete token mapping.
 
 ## Implementation Notes
 
-- Start from Mamo's CSS variables and Tailwind theme — never define a parallel set of DD tokens.
+- Start from Moonwell's CSS variables and Tailwind v4 `@theme inline` block in `globals.css` — never define a parallel set of DD tokens.
 - Keep component APIs simple. Most of the feel comes from spacing, typography, and state handling, not from prop-heavy abstractions.
 - Use inline SVG, lightweight illustration strokes, or quiet geometric diagrams when you need decoration.
 
 ## Technical Details
 
-- Reference tokens from the Mamo theme for all color, radius, shadow, spacing, and typography decisions.
+- Reference tokens from the Moonwell theme for all color, radius, shadow, spacing, and typography decisions.
 - Model most pages as `content + rail`, where the content column owns reading rhythm and the rail owns live media or controls.
 - Use sticky rails on desktop, then inline the same content lower in the flow on mobile instead of maintaining separate desktop-only logic.
 - Keep motion local to the thing that changes state. Prefer animating a CTA, active marker, or rail reveal instead of animating the whole page.
@@ -111,7 +116,7 @@ export function DDPageShell({
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto grid w-full max-w-[1280px] gap-10 px-6 py-10 lg:grid-cols-[minmax(0,44rem)_minmax(320px,1fr)] lg:px-10">
         <main className="space-y-8">
-          <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+          <p className="font-mono text-xs uppercase tracking-wider text-muted">
             {eyebrow}
           </p>
           <h1 className="max-w-[14ch] text-5xl leading-[1.05] tracking-[-0.04em]">
@@ -138,7 +143,7 @@ export function DDPageShell({
 
 ## Supporting Files
 
-- [foundation.md](foundation.md): token mapping to Mamo's design system, typography, motion cues, and visual rules
+- [foundation.md](foundation.md): token mapping to Moonwell's design system, typography, motion cues, and visual rules
 - [surfaces.md](surfaces.md): surface-specific recipes for marketing, editorial, prototype, resource, and mobile layouts
 
 ## Related Skills
