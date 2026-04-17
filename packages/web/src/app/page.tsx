@@ -1,5 +1,7 @@
 import CopySkillButton from './components/CopySkillButton';
 import CopyButton from './components/CopyButton';
+import TerminalDemo from './components/TerminalDemo';
+import LunarTerrain from './components/LunarTerrainMount';
 
 const CAPABILITIES = [
   { category: "Read", items: [
@@ -62,8 +64,9 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="flex flex-col items-center px-6 pt-24 pb-20 md:pt-32 md:pb-28">
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.04em] text-center max-w-4xl leading-[1.02]">
+      <section className="relative flex flex-col items-center px-6 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
+        <LunarTerrain />
+        <h1 className="relative text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.04em] text-center max-w-4xl leading-[1.02]">
           Give your agent DeFi superpowers with{" "}
           <span className="text-accent">Moonwell</span>.
         </h1>
@@ -90,35 +93,7 @@ export default function Home() {
               <div className="w-2.5 h-2.5 rounded-full bg-border" />
               <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
             </div>
-            <div className="px-5 py-4 font-mono text-sm space-y-2">
-              <div>
-                <span className="text-accent select-none" aria-hidden="true">❯ </span>
-                <span className="text-foreground">check my yield opportunities on moonwell</span>
-              </div>
-              <div className="text-muted ml-4">
-                <span className="select-none" aria-hidden="true">↳ </span>scanning Base markets&hellip;
-              </div>
-              <div className="space-y-1.5 ml-4 pt-1">
-                <div className="flex gap-2">
-                  <span className="text-green shrink-0 select-none" aria-hidden="true">✓</span>
-                  <span className="text-foreground w-14">USDC</span>
-                  <span className="text-accent w-20">8.2% APY</span>
-                  <span className="text-muted">$42M TVL</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-green shrink-0 select-none" aria-hidden="true">✓</span>
-                  <span className="text-foreground w-14">ETH</span>
-                  <span className="text-accent w-20">3.1% APY</span>
-                  <span className="text-muted">$18M TVL</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-green shrink-0 select-none" aria-hidden="true">✓</span>
-                  <span className="text-foreground w-14">cbBTC</span>
-                  <span className="text-accent w-20">4.7% APY</span>
-                  <span className="text-muted">$9M TVL</span>
-                </div>
-              </div>
-            </div>
+            <TerminalDemo />
           </div>
         </div>
       </section>
