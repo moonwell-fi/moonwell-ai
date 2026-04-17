@@ -2,16 +2,19 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { PROMPT_ORDER, RUN_SCRIPT_EVENT, SCRIPTS, dispatchRunScript } from '../lib/scripts';
+import { Check } from 'lucide-react';
+import { PROMPT_ORDER, SCRIPTS } from '../lib/scripts';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 const ROTATE_MS = 4000;
+const COPIED_HOLD_MS = 1600;
 
 export default function PromptCarousel() {
-  const defaultId = (PROMPT_ORDER.includes('yield' as (typeof PROMPT_ORDER)[number]) ? 'yield' : PROMPT_ORDER[0]) as string;
-  const [index, setIndex] = useState<number>(() => {
-    const i = PROMPT_ORDER.indexOf(defaultId as (typeof PROMPT_ORDER)[number]);
-    return i >= 0 ? i : 0;
-  });
+  const defaultIndex = Math.max(
+    0,
+    PROMPT_ORDER.indexOf('yield' as (typeof PROMPT_ORDER)[number])
+  );
+  const [index, setIndex] = useState<number>(defaultIndex);
   const [paused, setPaused] = useState(false);
   const reduceMotion = useReducedMotion();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -19,31 +22,25 @@ export default function PromptCarousel() {
   const currentId = PROMPT_ORDER[index] as string;
   const current = SCRIPTS[currentId];
 
-  // Rotation
+  const [copied, copy] = useCopyToClipboard(current.prompt, COPIED_HOLD_MS);
+
   useEffect(() => {
-    if (paused) return;
+    // Pause rotation while feedback is visible so the user sees what they
+    // actually copied.
+    if (paused || copied) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
+    }
     intervalRef.current = setInterval(() => {
       setIndex((i) => (i + 1) % PROMPT_ORDER.length);
     }, ROTATE_MS);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [paused]);
-
-  // External run-script sync — keep the displayed prompt aligned with terminal state
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const id = (e as CustomEvent<string>).detail;
-      if (!id) return;
-      const i = PROMPT_ORDER.indexOf(id as (typeof PROMPT_ORDER)[number]);
-      if (i >= 0) setIndex(i);
-    };
-    window.addEventListener(RUN_SCRIPT_EVENT, handler);
-    return () => window.removeEventListener(RUN_SCRIPT_EVENT, handler);
-  }, []);
+  }, [paused, copied]);
 
   const activate = () => {
-    dispatchRunScript(currentId);
+    copy();
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -61,7 +58,7 @@ export default function PromptCarousel() {
     <div
       role="button"
       tabIndex={0}
-      aria-label={`Try prompt: ${current.prompt}`}
+      aria-label={copied ? `Copied prompt: ${current.prompt}` : `Copy prompt: ${current.prompt}`}
       onClick={activate}
       onKeyDown={onKeyDown}
       onMouseEnter={() => setPaused(true)}
@@ -71,7 +68,22 @@ export default function PromptCarousel() {
       className="relative bg-card/60 hover:bg-card rounded-lg px-5 py-5 font-mono text-sm cursor-pointer transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent overflow-hidden"
     >
       <div className="flex items-start gap-2 min-h-[1.5rem]">
-        <span className="text-accent select-none shrink-0" aria-hidden="true">❯ </span>
+        <span className="relative inline-flex w-4 h-5 items-center justify-center shrink-0 select-none" aria-hidden="true">
+          <span
+            className={`absolute text-accent transition-[opacity,transform,filter] duration-150 ease-out ${
+              copied ? 'opacity-0 scale-90 blur-[2px]' : 'opacity-100 scale-100 blur-0'
+            }`}
+          >
+            ❯
+          </span>
+          <span
+            className={`absolute inline-flex text-green transition-[opacity,transform,filter] duration-150 ease-out ${
+              copied ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-90 blur-[2px]'
+            }`}
+          >
+            <Check size={14} strokeWidth={2.25} />
+          </span>
+        </span>
         <div className="relative flex-1">
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -81,12 +93,20 @@ export default function PromptCarousel() {
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, filter: 'blur(4px)' }}
               transition={transition}
               aria-live="polite"
-              className="block text-foreground"
+              className={`block transition-colors duration-150 ${copied ? 'text-muted' : 'text-foreground'}`}
             >
               {current.prompt}
             </motion.span>
           </AnimatePresence>
         </div>
+        <span
+          className={`shrink-0 text-[10px] uppercase tracking-[0.22em] font-mono transition-[opacity,transform] duration-200 ${
+            copied ? 'opacity-100 translate-x-0 text-green' : 'opacity-0 translate-x-1 text-muted'
+          }`}
+          aria-hidden="true"
+        >
+          Copied
+        </span>
       </div>
     </div>
   );
