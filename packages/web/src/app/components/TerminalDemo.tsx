@@ -272,17 +272,7 @@ export default function TerminalDemo() {
       </AnimatePresence>
 
       <div ref={contentRef} className="relative px-5 py-4 space-y-1" aria-hidden="true">
-        <motion.div
-          className="leading-6 pl-[2ch] -indent-[2ch]"
-          animate={
-            reduceMotion
-              ? undefined
-              : phase === 'scanning'
-                ? { filter: 'blur(1.5px)', opacity: 0.7 }
-                : { filter: 'blur(0px)', opacity: 1 }
-          }
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-        >
+        <div className="leading-6 pl-[2ch] -indent-[2ch]">
           <span className="text-accent select-none">❯ </span>
           {phase === 'typing' || phase === 'idle' ? (
             <span className="text-foreground">{typed}</span>
@@ -290,7 +280,7 @@ export default function TerminalDemo() {
             <PromptText text={script.prompt} runCount={runCount} reduceMotion={!!reduceMotion} />
           )}
           {showTypingCaret && <span className={CARET_CLASS} />}
-        </motion.div>
+        </div>
 
         <AnimatePresence>
           {(phase === 'scanning' || phase === 'results' || phase === 'complete') && (
