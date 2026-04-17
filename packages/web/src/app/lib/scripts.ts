@@ -150,6 +150,7 @@ export const PROMPT_ORDER: ReadonlyArray<keyof typeof SCRIPTS> = [
 ];
 
 export const RUN_SCRIPT_EVENT = 'moonwell:run-script';
+export const TERMINAL_READY_EVENT = 'moonwell:terminal-ready';
 
 export function dispatchRunScript(id: string) {
   window.dispatchEvent(new CustomEvent(RUN_SCRIPT_EVENT, { detail: id }));

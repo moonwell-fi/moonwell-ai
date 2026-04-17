@@ -100,6 +100,11 @@ export default function Home() {
               <TerminalDemo />
             </div>
           </div>
+
+          {/* Example prompts — revealed after the first demo run completes */}
+          <div className="w-full max-w-2xl mt-5">
+            <ExamplePrompts />
+          </div>
         </div>
       </section>
 
@@ -119,14 +124,6 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
-
-      {/* Try asking */}
-      <section className="max-w-3xl mx-auto px-6 py-24 w-full">
-        <div className="mb-6">
-          <Eyebrow>Try asking</Eyebrow>
-        </div>
-        <ExamplePrompts />
       </section>
 
       {/* Your risk */}

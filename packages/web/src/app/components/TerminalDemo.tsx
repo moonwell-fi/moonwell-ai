@@ -6,6 +6,7 @@ import { RotateCw } from 'lucide-react';
 import {
   RUN_SCRIPT_EVENT,
   SCRIPTS,
+  TERMINAL_READY_EVENT,
   type OutputColor,
   type OutputRow,
   type Script,
@@ -107,6 +108,7 @@ export default function TerminalDemo() {
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const startedRef = useRef(false);
   const lastHRef = useRef(MIN_HEIGHT);
+  const readyDispatchedRef = useRef(false);
 
   const [script, setScript] = useState<Script>(SCRIPTS.yield);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -237,6 +239,16 @@ export default function TerminalDemo() {
 
   const showTypingCaret = phase === 'typing';
   const showReadyCaret = phase === 'complete';
+
+  // Once the first-ever run reaches complete, broadcast so the prompt cards
+  // (below the terminal in the hero) can stagger-fade in without competing
+  // with the typing animation.
+  useEffect(() => {
+    if (phase === 'complete' && !readyDispatchedRef.current) {
+      readyDispatchedRef.current = true;
+      window.dispatchEvent(new CustomEvent(TERMINAL_READY_EVENT));
+    }
+  }, [phase]);
 
   return (
     <motion.div

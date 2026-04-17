@@ -82,11 +82,11 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uContour;
   uniform vec3 uAccent;
   uniform float uDensity;
-  uniform float uFocusSpeed;
-  uniform float uFocusCenter;
-  uniform float uFocusWeight;
-  uniform float uPulseStrength;
-  uniform float uPulseSpeed;
+  uniform float uPoolHi;
+  uniform float uPoolLo;
+  uniform float uPoolStrength;
+  uniform float uSweepAngle;
+  uniform float uSweepStrength;
   uniform vec2 uCursor;
 
   void main() {
@@ -95,35 +95,35 @@ const fragmentShader = /* glsl */ `
     float thickness = 0.05 + 0.04 * fwidth(bands);
     float line = 1.0 - smoothstep(thickness, thickness + 0.03, lineDist);
 
-    // Elevation-based focus band (hero's primary moment).
-    float focus = uFocusCenter + 0.25 * sin(uTime * uFocusSpeed);
-    float focusBand = (1.0 - smoothstep(0.0, 0.055, abs(vElevation - focus))) * uFocusWeight;
-
-    // Radial pulse (footer's primary moment) — a concentric ring expands
-    // from center and fades as it reaches the edge.
-    float ringRadius = mod(uTime * uPulseSpeed, 0.7);
-    float ringDist = abs(length(vUv - 0.5) - ringRadius);
-    float ringGlow = (1.0 - smoothstep(0.0, 0.05, ringDist))
-                   * (1.0 - smoothstep(0.35, 0.7, ringRadius))
-                   * uPulseStrength;
-
     vec2 centered = vUv - 0.5;
     float r = length(centered * vec2(1.3, 1.0));
     float edgeFade = smoothstep(0.58, 0.22, r);
+
+    // Valley-pooling glow (hero's primary moment) — static, lit from within
+    // low elevations so basins read as filled with dim accent light.
+    float pool = smoothstep(uPoolHi, uPoolLo, vElevation) * uPoolStrength;
+
+    // Radar sweep (footer's primary moment) — a slow angular wedge rotates
+    // from plane center with a short bright head and a fading trail.
+    float fragAngle = atan(centered.y, centered.x);
+    float da = mod(fragAngle - uSweepAngle, 6.28318);
+    float leading = 1.0 - smoothstep(0.0, 0.26, da);
+    float trail = (1.0 - smoothstep(0.26, 0.70, da)) * 0.5;
+    float sweep = max(leading, trail) * uSweepStrength;
 
     float d = distance(vUv, uCursor);
     float hover = smoothstep(0.18, 0.0, d);
 
     vec3 col = uBg;
     col = mix(col, uContour, line * 0.55);
-    col = mix(col, uAccent, line * focusBand * 0.9);
-    col = mix(col, uAccent, line * ringGlow * 0.8);
+    col = mix(col, uAccent, pool * 0.25);
+    col = mix(col, uAccent, line * sweep * 0.9);
     col = mix(col, uAccent, line * hover * 0.6);
 
     float alpha = (
       line * 0.55
-      + line * focusBand * 0.45
-      + line * ringGlow * 0.35
+      + pool * 0.18
+      + line * sweep * 0.35
       + line * hover * 0.2
     ) * edgeFade;
 
@@ -135,33 +135,33 @@ type VariantConfig = {
   rotationX: number;
   scale: number;
   density: number;
-  focusSpeed: number;
-  focusCenter: number;
-  focusWeight: number;
-  pulseStrength: number;
-  pulseSpeed: number;
+  poolHi: number;
+  poolLo: number;
+  poolStrength: number;
+  sweepStrength: number;
 };
+
+const SWEEP_SPEED = (2 * Math.PI) / 20; // one revolution per ~20s
+const SWEEP_REDUCED_ANGLE = 2.2; // static bearing when reduce-motion is set
 
 const VARIANT_SHADER: Record<Variant, VariantConfig> = {
   hero: {
     rotationX: -0.9,
     scale: 3.2,
     density: 9.0,
-    focusSpeed: 0.08,
-    focusCenter: 0.22,
-    focusWeight: 1.0,
-    pulseStrength: 0.0,
-    pulseSpeed: 0.0,
+    poolHi: 0.05,
+    poolLo: -0.35,
+    poolStrength: 1.0,
+    sweepStrength: 0.0,
   },
   footer: {
     rotationX: -1.15,
     scale: 5.2,
     density: 13.0,
-    focusSpeed: 0.04,
-    focusCenter: -0.18,
-    focusWeight: 0.35,
-    pulseStrength: 0.9,
-    pulseSpeed: 0.09,
+    poolHi: 0.0,
+    poolLo: -0.4,
+    poolStrength: 0.0,
+    sweepStrength: 0.9,
   },
 };
 
@@ -185,11 +185,14 @@ function Terrain({
       uAccent: { value: new THREE.Color('#2474da') },
       uDensity: { value: config.density },
       uScale: { value: config.scale },
-      uFocusSpeed: { value: config.focusSpeed },
-      uFocusCenter: { value: config.focusCenter },
-      uFocusWeight: { value: config.focusWeight },
-      uPulseStrength: { value: config.pulseStrength },
-      uPulseSpeed: { value: config.pulseSpeed },
+      uPoolHi: { value: config.poolHi },
+      uPoolLo: { value: config.poolLo },
+      uPoolStrength: { value: config.poolStrength },
+      uSweepAngle: {
+        value:
+          config.sweepStrength > 0 && reduceMotion ? SWEEP_REDUCED_ANGLE : 0,
+      },
+      uSweepStrength: { value: config.sweepStrength },
       uCursor: { value: new THREE.Vector2(-10, -10) },
     }),
     // Uniforms are created once and mutated in place; variant config is
@@ -202,6 +205,11 @@ function Terrain({
     if (!mat.current || !mesh.current) return;
     if (!reduceMotion) {
       mat.current.uniforms.uTime.value += delta;
+      if (config.sweepStrength > 0) {
+        mat.current.uniforms.uSweepAngle.value =
+          (mat.current.uniforms.uSweepAngle.value + delta * SWEEP_SPEED) %
+          (Math.PI * 2);
+      }
       const p = pointerRef.current;
       if (p.x > -5 && p.y > -5) {
         const tx = p.x * 0.08;
