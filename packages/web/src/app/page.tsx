@@ -2,6 +2,7 @@ import CopySkillButton from './components/CopySkillButton';
 import CopyButton from './components/CopyButton';
 import TerminalDemo from './components/TerminalDemo';
 import LunarTerrain from './components/LunarTerrainMount';
+import PlanArtifact from './components/PlanArtifact';
 
 const CAPABILITIES = [
   { category: "Read", items: [
@@ -27,14 +28,16 @@ const CAPABILITIES = [
 const EXAMPLE_PROMPTS = [
   "What are the best yield opportunities on Moonwell right now?",
   "Supply 50 USDC to Moonwell on Base",
+  "Compare USDC supply rates on Base and Optimism",
   "Check my health factor on Moonwell",
   "Borrow 20 USDC against my collateral",
+  "Show my pending WELL rewards",
 ];
 
 const STEPS = [
   { step: "01", title: "Install the skill", desc: "Point your agent (Claude Code, Cursor, Hermes) at the skill file." },
   { step: "02", title: "Prompt naturally", desc: "Ask about rates, supply tokens, manage positions in plain language." },
-  { step: "03", title: "Review & execute", desc: "The agent prepares unsigned transactions. You sign when ready." },
+  { step: "03", title: "Review & sign", desc: "Write commands return an unsigned plan with simulation and preview. Pipe to submit, or sign when ready." },
 ];
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -72,10 +75,13 @@ export default function Home() {
             <span className="text-accent">Moonwell</span>.
           </h1>
           <p className="mt-8 max-w-xl text-center text-lg leading-relaxed text-muted">
-            A CLI and skill that lets any AI agent read Moonwell markets and prepare transactions. You sign.
+            A CLI and skill that lets any AI agent read Moonwell markets and prepare unsigned transactions. Simulated. Previewed. You sign.
+          </p>
+          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.2em] text-muted/70">
+            Base · Optimism · no keys required
           </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-sm sm:w-auto sm:max-w-none">
+          <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-sm sm:w-auto sm:max-w-none">
             <CopySkillButton />
             <a
               href="#capabilities"
@@ -116,6 +122,17 @@ export default function Home() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* The plan artifact */}
+      <section className="max-w-3xl mx-auto px-6 pb-24 w-full">
+        <div className="mb-6">
+          <Eyebrow>The plan</Eyebrow>
+        </div>
+        <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
+          Every write command returns a structured, unsigned plan — ordered transactions, preview, simulation, and warnings — for the agent or you to inspect before signing.
+        </p>
+        <PlanArtifact />
       </section>
 
       {/* How it works */}
@@ -190,6 +207,19 @@ export default function Home() {
                   <span className="text-muted select-none" aria-hidden="true">$ </span><span className="text-foreground">npm install @moonwell-fi/cli</span>
                 </span>
                 <CopyButton text="npm install @moonwell-fi/cli" />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Prepare &amp; submit in one pipe</h3>
+              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-center gap-3">
+                <span className="flex-1 overflow-x-auto whitespace-nowrap">
+                  <span className="text-muted select-none" aria-hidden="true">$ </span>
+                  <span className="text-foreground">moonwell supply --asset USDC --amount-decimal 50 --json</span>
+                  <span className="text-muted"> | </span>
+                  <span className="text-foreground">moonwell submit</span>
+                </span>
+                <CopyButton text="moonwell supply --asset USDC --amount-decimal 50 --json | moonwell submit" />
               </div>
             </div>
           </div>
