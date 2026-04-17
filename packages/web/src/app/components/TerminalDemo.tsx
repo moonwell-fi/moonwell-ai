@@ -11,7 +11,7 @@ import {
   type Script,
 } from '../lib/scripts';
 
-type Phase = 'idle' | 'typing' | 'scanning' | 'results' | 'complete';
+type Phase = 'idle' | 'typing' | 'morphing' | 'scanning' | 'results' | 'complete';
 
 const MIN_HEIGHT = 176;
 const rowSpring = { type: 'spring' as const, stiffness: 180, damping: 22 };
@@ -21,8 +21,8 @@ const rowEnter = {
 };
 
 function typingDelay(ch: string): number {
-  const base = 32 + Math.random() * 38;
-  if (ch === ' ') return base + 80 + Math.random() * 70;
+  const base = 15 + Math.random() * 15;
+  if (ch === ' ') return base + 30 + Math.random() * 30;
   return base;
 }
 
@@ -118,10 +118,9 @@ export default function TerminalDemo() {
   const heightTarget = useMotionValue(MIN_HEIGHT);
   const height = useSpring(heightTarget, { stiffness: 200, damping: 28, mass: 0.9 });
 
-  const run = useCallback((next: Script) => {
+  const run = useCallback((next: Script, { rerun = false }: { rerun?: boolean } = {}) => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
-    setTyped('');
     setRowsShown(0);
 
     if (reduceMotion) {
@@ -135,22 +134,35 @@ export default function TerminalDemo() {
       timersRef.current.push(setTimeout(fn, ms));
     };
 
+    const runResults = () => {
+      setPhase('scanning');
+      schedule(() => {
+        setPhase('results');
+        let acc = 0;
+        next.rows.forEach((r, idx) => {
+          schedule(() => setRowsShown(idx + 1), acc);
+          acc += r.type === 'blank' ? 20 : 150;
+        });
+        schedule(() => setPhase('complete'), acc + 120);
+      }, 900);
+    };
+
+    if (rerun) {
+      // Skip typing: the prompt text is swapped via per-character blur-fade
+      // transitions in the render path. Hold briefly so the morph reads
+      // before the scan begins.
+      setTyped(next.prompt);
+      setPhase('morphing');
+      schedule(runResults, 420);
+      return;
+    }
+
+    setTyped('');
     setPhase('typing');
     let i = 0;
     const typeNext = () => {
       if (i >= next.prompt.length) {
-        schedule(() => setPhase('scanning'), 420);
-        schedule(() => {
-          setPhase('results');
-          // Blank rows reveal instantly with the previous row; space them
-          // so content-heavy rows get their own beat.
-          let acc = 0;
-          next.rows.forEach((r, idx) => {
-            schedule(() => setRowsShown(idx + 1), acc);
-            acc += r.type === 'blank' ? 20 : 150;
-          });
-          schedule(() => setPhase('complete'), acc + 120);
-        }, 420 + 900);
+        schedule(runResults, 420);
         return;
       }
       const ch = next.prompt[i];
@@ -188,7 +200,7 @@ export default function TerminalDemo() {
 
   useEffect(() => {
     if (runCount === 0) return;
-    run(script);
+    run(script, { rerun: true });
   }, [runCount, run, script]);
 
   useEffect(() => {
@@ -262,7 +274,11 @@ export default function TerminalDemo() {
       <div ref={contentRef} className="relative px-5 py-4 space-y-1" aria-hidden="true">
         <div className="leading-6 pl-[2ch] -indent-[2ch]">
           <span className="text-accent select-none">❯ </span>
-          <span className="text-foreground">{typed}</span>
+          {phase === 'typing' || phase === 'idle' ? (
+            <span className="text-foreground">{typed}</span>
+          ) : (
+            <PromptText text={script.prompt} runCount={runCount} reduceMotion={!!reduceMotion} />
+          )}
           {showTypingCaret && <span className={CARET_CLASS} />}
         </div>
 
@@ -331,6 +347,42 @@ export default function TerminalDemo() {
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+function PromptText({
+  text,
+  runCount,
+  reduceMotion,
+}: {
+  text: string;
+  runCount: number;
+  reduceMotion: boolean;
+}) {
+  if (reduceMotion) {
+    return <span className="text-foreground">{text}</span>;
+  }
+  return (
+    <span className="text-foreground">
+      {Array.from(text).map((ch, idx) => (
+        <motion.span
+          // Key by runCount + idx so every rerun remounts each glyph and
+          // replays the blur-fade even when the character at that position
+          // hasn't changed.
+          key={`${runCount}-${idx}`}
+          initial={{ opacity: 0, filter: 'blur(6px)' }}
+          animate={{ opacity: 1, filter: 'blur(0px)' }}
+          transition={{
+            duration: 0.22,
+            delay: Math.min(idx * 0.015, 0.4),
+            ease: 'easeOut',
+          }}
+          style={{ display: 'inline-block', whiteSpace: 'pre' }}
+        >
+          {ch}
+        </motion.span>
+      ))}
+    </span>
   );
 }
 

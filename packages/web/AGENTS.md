@@ -83,7 +83,7 @@ These are the durable rules. Specific token values live above; this section is t
 
 9. **Terminal output is one size, one family.** Inside any terminal-framed card (hero demo, `PlanArtifact`, `HealthArtifact`, install snippets), every visible line stays at the same font size and in `font-mono`. Use color and weight for emphasis — never `text-lg`/`text-xs` or a switch to `font-sans`. Chrome around the card (title bar, eyebrow labels) is not output and may differ. Wrapped command lines use hanging indent (`pl-[2ch] -indent-[2ch]`) so continuations align under the first character of the command, not under the prompt glyph.
 
-10. **Agent prompts blink; shell commands don't.** Agent-prompt contexts (the `❯` prefix) render with a blinking caret appended to the typed text to signal "entered / ready" — reuse the same `.cursor-blink` span markup from `TerminalDemo`. Shell-command contexts (the `$` prefix) are copy/paste invocations, not live input, and never get a caret. Mixing the two erases the signal.
+10. **The blinking caret marks live input, not decoration.** Render the `.cursor-blink` span only where a prompt is being actively typed or is waiting for the next input (e.g. `TerminalDemo`'s typing line and its post-complete ready caret). Static prompt-selection cards, shell-command snippets (the `$` prefix), and any other copy/paste or click-to-run surface never get a caret — those aren't live input. Mixing the two erases the signal.
 
 11. **Dependencies are deliberate.** Prefer CSS, hand-rolled primitives, or existing deps before pulling a new library. Icons use `lucide-react` (1.5–2 stroke, 15–16px grid). Motion uses CSS transitions and `prefers-reduced-motion` unless a real morph demands more.
 

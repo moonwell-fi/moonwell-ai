@@ -186,8 +186,9 @@ export default function LunarTerrain() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      className="pointer-events-none absolute top-0 left-0 right-0 z-0 overflow-hidden"
       style={{
+        height: 'min(100dvh, 900px)',
         maskImage:
           'radial-gradient(ellipse at 50% 55%, black 35%, transparent 80%)',
         WebkitMaskImage:
