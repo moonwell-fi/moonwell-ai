@@ -1,28 +1,34 @@
-const TRANSACTIONS = [
-  { idx: '01', step: 'approve', desc: 'Approve token for Moonwell supply' },
-  { idx: '02', step: 'moonwell-supply', desc: 'Supply asset to Moonwell' },
+const COMMAND =
+  'moonwell supply --asset USDC --amount-decimal 100 --from 0x... --chain base';
+
+const SUMMARY: Array<[string, string]> = [
+  ['Asset', '100 USDC'],
+  ['mToken', '0xEdc8...6c22'],
+  ['Est. APY', '2.92%'],
+  ['Steps', '2'],
 ];
 
-const PREVIEW: Array<[string, string]> = [
-  ['asset', 'USDC'],
-  ['amount', '100'],
-  ['chain', 'base · 8453'],
-  ['estimated APY', '2.92%'],
+const STEPS: Array<[string, string]> = [
+  ['approve', 'Approve token for Moonwell supply'],
+  ['moonwell-supply', 'Supply asset to Moonwell'],
 ];
 
-function Field({ k, v }: { k: string; v: React.ReactNode }) {
+function KV({ k, v, color = 'text-foreground' }: { k: string; v: string; color?: string }) {
   return (
-    <div className="flex gap-2">
-      <span className="text-muted w-32 shrink-0">{k}</span>
-      <span className="text-foreground">{v}</span>
+    <div className="flex gap-3 pl-4">
+      <span className="text-accent w-32 shrink-0">{k}</span>
+      <span className={color}>{v}</span>
     </div>
   );
+}
+
+function Separator() {
+  return <div className="text-muted select-none" aria-hidden="true">{'─'.repeat(48)}</div>;
 }
 
 export default function PlanArtifact() {
   return (
     <div className="border border-border rounded-xl bg-card overflow-hidden">
-      {/* Chrome */}
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-background/60">
         <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
         <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
@@ -30,62 +36,34 @@ export default function PlanArtifact() {
         <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
       </div>
 
-      {/* Output */}
-      <div className="px-5 py-4 font-mono text-sm space-y-3">
-        {/* Command */}
-        <div className="whitespace-nowrap overflow-x-auto">
+      <div className="px-5 py-4 font-mono text-sm space-y-0.5">
+        <div className="leading-6 pl-[2ch] -indent-[2ch] mb-2">
           <span className="text-accent select-none" aria-hidden="true">❯ </span>
-          <span className="text-foreground">moonwell supply </span>
-          <span className="text-muted">--asset USDC --amount-decimal 100 --json</span>
+          <span className="text-foreground">{COMMAND}</span>
         </div>
 
-        {/* Header */}
-        <div className="pt-1 space-y-1">
-          <Field k="operation" v="supply" />
-          <Field k="requirements" v={<span className="text-muted">Sufficient USDC balance · Gas for 2 tx</span>} />
-        </div>
+        <div className="pl-2 text-foreground font-semibold">Supply — Base</div>
+        <Separator />
 
-        {/* Transactions */}
-        <div className="pt-1">
-          <div className="text-muted">transactions</div>
-          <ol className="mt-1 space-y-1">
-            {TRANSACTIONS.map((t) => (
-              <li key={t.idx} className="flex gap-2 ml-4">
-                <span className="text-muted/70 select-none shrink-0" aria-hidden="true">{t.idx}</span>
-                <span className="text-accent w-36 shrink-0">{t.step}</span>
-                <span className="text-muted hidden sm:inline">{t.desc}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
+        {SUMMARY.map(([k, v]) => (
+          <KV key={k} k={k} v={v} />
+        ))}
 
-        {/* Preview */}
-        <div className="pt-1">
-          <div className="text-muted">preview</div>
-          <div className="mt-1 space-y-1">
-            {PREVIEW.map(([k, v]) => (
-              <div key={k} className="flex gap-2 ml-4">
-                <span className="text-muted w-28 shrink-0">{k}</span>
-                <span className="text-foreground">{v}</span>
-              </div>
-            ))}
+        <div>&nbsp;</div>
+
+        {STEPS.map(([name, desc]) => (
+          <div key={name} className="flex gap-2 pl-4">
+            <span className="text-accent shrink-0">{name}</span>
+            <span className="text-muted select-none shrink-0" aria-hidden="true">—</span>
+            <span className="text-muted">{desc}</span>
           </div>
-        </div>
+        ))}
 
-        {/* Simulation + warnings */}
-        <div className="pt-1 space-y-1">
-          <Field
-            k="simulation"
-            v={
-              <>
-                <span className="text-green select-none" aria-hidden="true">✓</span>
-                <span className="ml-2">success</span>
-                <span className="text-muted"> · 185,000 gas</span>
-              </>
-            }
-          />
-          <Field k="warnings" v={<span className="text-muted">none</span>} />
-        </div>
+        <div>&nbsp;</div>
+
+        <KV k="Simulation" v="Passed (gas: 185,000)" color="text-green" />
+
+        <Separator />
       </div>
     </div>
   );

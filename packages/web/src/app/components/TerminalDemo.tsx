@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 import { RotateCw } from 'lucide-react';
-import { RUN_SCRIPT_EVENT, SCRIPTS, type Script } from '../lib/scripts';
+import {
+  RUN_SCRIPT_EVENT,
+  SCRIPTS,
+  type OutputColor,
+  type OutputRow,
+  type Script,
+} from '../lib/scripts';
 
 type Phase = 'idle' | 'typing' | 'scanning' | 'results' | 'complete';
 
@@ -22,6 +28,77 @@ function typingDelay(ch: string): number {
 
 const CARET_CLASS =
   'inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink';
+
+const COLOR_CLASS: Record<OutputColor, string> = {
+  foreground: 'text-foreground',
+  accent: 'text-accent',
+  muted: 'text-muted',
+  green: 'text-green',
+  orange: 'text-orange',
+  red: 'text-red',
+};
+
+function ValueCell({ value, color }: { value: string; color: OutputColor }) {
+  const reduceMotion = useReducedMotion();
+  // Values that settle to green animate from accent → green to match the
+  // CLI's "simulated ✓" moment without breaking the one-font-size rule.
+  if (color === 'green' && !reduceMotion) {
+    return (
+      <motion.span
+        initial={{ color: 'var(--accent)', filter: 'blur(3px)' }}
+        animate={{ color: 'var(--green)', filter: 'blur(0px)' }}
+        transition={{ color: { delay: 0.22, duration: 0.45 }, filter: { duration: 0.22 } }}
+      >
+        {value}
+      </motion.span>
+    );
+  }
+  return <span className={COLOR_CLASS[color]}>{value}</span>;
+}
+
+function RowRenderer({ row }: { row: OutputRow }) {
+  switch (row.type) {
+    case 'cmd':
+      return (
+        <div className="leading-6 pl-[2ch] -indent-[2ch]">
+          <span className="text-accent select-none" aria-hidden="true">❯ </span>
+          <span className="text-foreground">{row.text}</span>
+        </div>
+      );
+    case 'header':
+      return <div className="pl-2 text-foreground font-semibold">{row.text}</div>;
+    case 'asset':
+      return <div className="pl-2 text-foreground font-semibold">{row.text}</div>;
+    case 'kv':
+      return (
+        <div className="flex gap-3 pl-4">
+          <span className="text-accent w-36 shrink-0">{row.key}</span>
+          <ValueCell value={row.value} color={row.valueColor ?? 'foreground'} />
+        </div>
+      );
+    case 'kvkv':
+      return (
+        <div className="flex gap-3 pl-4">
+          <span className="text-accent w-28 shrink-0">{row.k1}</span>
+          <span className="text-foreground w-20 shrink-0">{row.v1}</span>
+          <span className="text-accent w-14 shrink-0">{row.k2}</span>
+          <span className="text-foreground">{row.v2}</span>
+        </div>
+      );
+    case 'step':
+      return (
+        <div className="flex gap-2 pl-4">
+          <span className="text-accent shrink-0">{row.name}</span>
+          <span className="text-muted select-none shrink-0" aria-hidden="true">—</span>
+          <span className="text-muted">{row.desc}</span>
+        </div>
+      );
+    case 'dim':
+      return <div className="pl-8 text-muted">{row.text}</div>;
+    case 'blank':
+      return <div>&nbsp;</div>;
+  }
+}
 
 export default function TerminalDemo() {
   const reduceMotion = useReducedMotion();
@@ -65,10 +142,14 @@ export default function TerminalDemo() {
         schedule(() => setPhase('scanning'), 420);
         schedule(() => {
           setPhase('results');
-          next.rows.forEach((_, idx) => {
-            schedule(() => setRowsShown(idx + 1), idx * 210);
+          // Blank rows reveal instantly with the previous row; space them
+          // so content-heavy rows get their own beat.
+          let acc = 0;
+          next.rows.forEach((r, idx) => {
+            schedule(() => setRowsShown(idx + 1), acc);
+            acc += r.type === 'blank' ? 20 : 150;
           });
-          schedule(() => setPhase('complete'), next.rows.length * 210 + 120);
+          schedule(() => setPhase('complete'), acc + 120);
         }, 420 + 900);
         return;
       }
@@ -110,7 +191,6 @@ export default function TerminalDemo() {
     run(script);
   }, [runCount, run, script]);
 
-  // Subscribe to external triggers from the prompt grid.
   useEffect(() => {
     const handler = (e: Event) => {
       const id = (e as CustomEvent<string>).detail;
@@ -154,9 +234,7 @@ export default function TerminalDemo() {
     >
       {phase === 'complete' && (
         <p className="sr-only" aria-live="polite">
-          {`Terminal: ${script.command}. ${script.scanLine}. ${script.rows
-            .map((r) => r.cells.filter(Boolean).join(' '))
-            .join('. ')}.`}
+          {`Terminal: ${script.command}. ${script.scanLine}.`}
         </p>
       )}
 
@@ -181,7 +259,7 @@ export default function TerminalDemo() {
         )}
       </AnimatePresence>
 
-      <div ref={contentRef} className="relative px-5 py-4 space-y-2" aria-hidden="true">
+      <div ref={contentRef} className="relative px-5 py-4 space-y-1" aria-hidden="true">
         <div className="leading-6 pl-[2ch] -indent-[2ch]">
           <span className="text-accent select-none">❯ </span>
           <span className="text-foreground">{typed}</span>
@@ -192,7 +270,7 @@ export default function TerminalDemo() {
           {(phase === 'scanning' || phase === 'results' || phase === 'complete') && (
             <motion.div
               key={`scan-${script.id}-${runCount}`}
-              className="text-muted ml-4"
+              className="text-muted pl-4"
               {...rowEnter}
               transition={reduceMotion ? { duration: 0 } : rowSpring}
             >
@@ -203,19 +281,15 @@ export default function TerminalDemo() {
           )}
         </AnimatePresence>
 
-        <div className="space-y-1.5 ml-4 pt-1">
+        <div className="pt-1 space-y-0.5">
           <AnimatePresence>
             {script.rows.slice(0, rowsShown).map((r, idx) => (
               <motion.div
                 key={`${script.id}-${idx}-${runCount}`}
-                className="flex gap-2 items-baseline"
                 {...rowEnter}
                 transition={reduceMotion ? { duration: 0 } : rowSpring}
               >
-                <ResultCheck />
-                <span className="text-foreground w-32 shrink-0 truncate">{r.cells[0]}</span>
-                <span className="text-accent shrink-0">{r.cells[1]}</span>
-                <span className="text-muted truncate">{r.cells[2]}</span>
+                <RowRenderer row={r} />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -267,23 +341,5 @@ function ScanDots() {
       <span className="scan-dot">.</span>
       <span className="scan-dot">.</span>
     </span>
-  );
-}
-
-function ResultCheck() {
-  const reduceMotion = useReducedMotion();
-  return (
-    <motion.span
-      className="shrink-0 select-none"
-      initial={reduceMotion ? false : { color: 'var(--accent)', filter: 'blur(3px)' }}
-      animate={{ color: 'var(--green)', filter: 'blur(0px)' }}
-      transition={
-        reduceMotion
-          ? { duration: 0 }
-          : { color: { delay: 0.22, duration: 0.45 }, filter: { duration: 0.22 } }
-      }
-    >
-      ✓
-    </motion.span>
   );
 }

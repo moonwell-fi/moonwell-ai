@@ -1,27 +1,23 @@
-import { Check } from 'lucide-react';
+const COMMAND = 'moonwell health --address 0x...';
 
-function Field({ k, v }: { k: string; v: React.ReactNode }) {
-  return (
-    <div className="flex gap-2">
-      <span className="text-muted w-32 shrink-0">{k}</span>
-      <span className="text-foreground">{v}</span>
-    </div>
-  );
-}
+const FIELDS: Array<[string, string, string?]> = [
+  ['Address', '0x1234...abcd'],
+  ['Total Supplied', '$1,240.00'],
+  ['Total Borrowed', '$240.00'],
+  ['Adj. Collateral', '$1,100.00'],
+  ['Health Factor', '4.58', 'text-green'],
+  ['Markets', '3'],
+];
 
-function LegendRow({ range, label, className }: { range: string; label: string; className: string }) {
-  return (
-    <div className="flex gap-3">
-      <span className={`w-24 shrink-0 ${className}`}>{range}</span>
-      <span className="text-muted">{label}</span>
-    </div>
-  );
-}
+const THRESHOLDS: Array<[string, string, string]> = [
+  ['> 1.5', 'healthy', 'text-green'],
+  ['1.1 – 1.5', 'caution', 'text-orange'],
+  ['< 1.1', 'liquidation risk', 'text-red'],
+];
 
 export default function HealthArtifact() {
   return (
     <div className="border border-border rounded-xl bg-card overflow-hidden">
-      {/* Chrome */}
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-background/60">
         <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
         <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
@@ -29,38 +25,32 @@ export default function HealthArtifact() {
         <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
       </div>
 
-      {/* Output */}
-      <div className="px-5 py-4 font-mono text-sm space-y-3">
-        {/* Command */}
-        <div className="leading-6 pl-[2ch] -indent-[2ch]">
+      <div className="px-5 py-4 font-mono text-sm space-y-0.5">
+        <div className="leading-6 pl-[2ch] -indent-[2ch] mb-2">
           <span className="text-accent select-none" aria-hidden="true">❯ </span>
-          <span className="text-foreground">moonwell health </span>
-          <span className="text-muted">--address 0x...</span>
+          <span className="text-foreground">{COMMAND}</span>
         </div>
 
-        {/* Account summary */}
-        <div className="pt-1 space-y-1">
-          <Field k="supplied" v="$1,240.00" />
-          <Field k="borrowed" v="$240.00" />
-          <Field k="collateral" v="$1,100.00" />
-        </div>
+        {FIELDS.map(([k, v, color]) => (
+          <div key={k} className="flex gap-3 pl-4">
+            <span className="text-accent w-36 shrink-0">{k}</span>
+            <span className={color ?? 'text-foreground'}>{v}</span>
+          </div>
+        ))}
 
-        {/* Health factor headline */}
-        <div className="pt-2 flex items-baseline gap-2">
-          <span className="text-muted w-32 shrink-0">health factor</span>
-          <span className="text-green font-semibold">4.58</span>
-          <span className="inline-flex items-center gap-1 text-green">
-            <Check size={14} strokeWidth={2.5} aria-hidden="true" />
-            healthy
-          </span>
-        </div>
+        <div>&nbsp;</div>
 
-        {/* Legend */}
-        <div className="pt-1 space-y-1">
-          <LegendRow range="> 1.5" label="healthy" className="text-green" />
-          <LegendRow range="1.1 – 1.5" label="caution" className="text-orange" />
-          <LegendRow range="< 1.1" label="liquidation risk" className="text-red" />
+        <div className="text-muted pl-4">
+          <span className="select-none" aria-hidden="true"># </span>
+          thresholds
         </div>
+        {THRESHOLDS.map(([range, label, color]) => (
+          <div key={range} className="flex gap-3 pl-4">
+            <span className="text-muted select-none w-4 shrink-0" aria-hidden="true">#</span>
+            <span className={`w-24 shrink-0 ${color}`}>{range}</span>
+            <span className="text-muted">{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
