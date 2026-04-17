@@ -1,5 +1,3 @@
-import { Check } from 'lucide-react';
-
 const TRANSACTIONS = [
   { idx: '01', step: 'approve', desc: 'Approve token for Moonwell supply' },
   { idx: '02', step: 'moonwell-supply', desc: 'Supply asset to Moonwell' },
@@ -8,70 +6,85 @@ const TRANSACTIONS = [
 const PREVIEW: Array<[string, string]> = [
   ['asset', 'USDC'],
   ['amount', '100'],
-  ['chain', 'Base · 8453'],
+  ['chain', 'base · 8453'],
   ['estimated APY', '2.92%'],
 ];
 
-function Label({ children }: { children: React.ReactNode }) {
+function Field({ k, v }: { k: string; v: React.ReactNode }) {
   return (
-    <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted">
-      {children}
-    </span>
+    <div className="flex gap-2">
+      <span className="text-muted w-32 shrink-0">{k}</span>
+      <span className="text-foreground">{v}</span>
+    </div>
   );
 }
 
 export default function PlanArtifact() {
   return (
-    <div className="bg-card/60 rounded-xl p-6 sm:p-8 font-mono text-sm">
-      {/* Header */}
-      <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 pb-6 border-b border-border/60">
-        <div>
-          <Label>operation</Label>
-          <p className="mt-1 text-foreground">supply</p>
-        </div>
-        <div>
-          <Label>requirements</Label>
-          <p className="mt-1 text-muted">Sufficient USDC balance · Gas for 2 tx</p>
-        </div>
+    <div className="border border-border rounded-xl bg-card overflow-hidden">
+      {/* Chrome */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-background/60">
+        <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
+        <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
+        <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
+        <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
       </div>
 
-      {/* Transactions */}
-      <div className="pt-6">
-        <Label>transactions</Label>
-        <ol className="mt-3 space-y-2">
-          {TRANSACTIONS.map((t) => (
-            <li key={t.idx} className="flex gap-4 items-baseline">
-              <span className="text-muted/70 select-none shrink-0" aria-hidden="true">{t.idx}</span>
-              <span className="text-accent w-36 shrink-0">{t.step}</span>
-              <span className="text-muted font-sans text-[13px] leading-relaxed">{t.desc}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
+      {/* Output */}
+      <div className="px-5 py-4 font-mono text-sm space-y-3">
+        {/* Command */}
+        <div className="whitespace-nowrap overflow-x-auto">
+          <span className="text-accent select-none" aria-hidden="true">❯ </span>
+          <span className="text-foreground">moonwell supply </span>
+          <span className="text-muted">--asset USDC --amount-decimal 100 --json</span>
+        </div>
 
-      {/* Preview + simulation */}
-      <div className="mt-6 pt-6 border-t border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <Label>preview</Label>
-          <dl className="mt-3 space-y-1.5">
+        {/* Header */}
+        <div className="pt-1 space-y-1">
+          <Field k="operation" v="supply" />
+          <Field k="requirements" v={<span className="text-muted">Sufficient USDC balance · Gas for 2 tx</span>} />
+        </div>
+
+        {/* Transactions */}
+        <div className="pt-1">
+          <div className="text-muted">transactions</div>
+          <ol className="mt-1 space-y-1">
+            {TRANSACTIONS.map((t) => (
+              <li key={t.idx} className="flex gap-2 ml-4">
+                <span className="text-muted/70 select-none shrink-0" aria-hidden="true">{t.idx}</span>
+                <span className="text-accent w-36 shrink-0">{t.step}</span>
+                <span className="text-muted hidden sm:inline">{t.desc}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Preview */}
+        <div className="pt-1">
+          <div className="text-muted">preview</div>
+          <div className="mt-1 space-y-1">
             {PREVIEW.map(([k, v]) => (
-              <div key={k} className="flex gap-3">
-                <dt className="text-muted w-28 shrink-0">{k}</dt>
-                <dd className="text-foreground">{v}</dd>
+              <div key={k} className="flex gap-2 ml-4">
+                <span className="text-muted w-28 shrink-0">{k}</span>
+                <span className="text-foreground">{v}</span>
               </div>
             ))}
-          </dl>
+          </div>
         </div>
-        <div>
-          <Label>simulation</Label>
-          <p className="mt-3 flex items-center gap-2">
-            <Check size={14} strokeWidth={2.25} className="text-green" aria-hidden="true" />
-            <span className="text-foreground">success</span>
-            <span className="text-muted">·</span>
-            <span className="text-muted">185,000 gas</span>
-          </p>
-          <Label>warnings</Label>
-          <p className="mt-2 text-muted">none</p>
+
+        {/* Simulation + warnings */}
+        <div className="pt-1 space-y-1">
+          <Field
+            k="simulation"
+            v={
+              <>
+                <span className="text-green select-none" aria-hidden="true">✓</span>
+                <span className="ml-2">success</span>
+                <span className="text-muted"> · 185,000 gas</span>
+              </>
+            }
+          />
+          <Field k="warnings" v={<span className="text-muted">none</span>} />
         </div>
       </div>
     </div>
