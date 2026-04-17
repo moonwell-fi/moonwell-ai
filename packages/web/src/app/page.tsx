@@ -2,9 +2,8 @@ import CopySkillButton from './components/CopySkillButton';
 import CopyButton from './components/CopyButton';
 import TerminalDemo from './components/TerminalDemo';
 import LunarTerrain from './components/LunarTerrainMount';
-import PlanArtifact from './components/PlanArtifact';
 import HealthArtifact from './components/HealthArtifact';
-import ExamplePrompts from './components/ExamplePrompts';
+import PromptCarousel from './components/PromptCarousel';
 
 const CAPABILITIES = [
   { category: "Read", items: [
@@ -103,37 +102,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Example prompts */}
-      <section className="max-w-3xl mx-auto px-6 pb-24 w-full">
-        <div className="mb-6">
-          <Eyebrow>Try asking</Eyebrow>
-        </div>
-        <ExamplePrompts />
-      </section>
-
-      {/* The plan + risk artifacts */}
-      <section className="max-w-3xl mx-auto px-6 pb-24 w-full space-y-12">
-        <div>
-          <div className="mb-6">
-            <Eyebrow>The plan</Eyebrow>
-          </div>
-          <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
-            Every write command returns a structured, unsigned plan — ordered transactions, preview, simulation, warnings — for the agent or you to inspect before signing.
-          </p>
-          <PlanArtifact />
-        </div>
-
-        <div>
-          <div className="mb-6">
-            <Eyebrow>Your risk</Eyebrow>
-          </div>
-          <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
-            Check account health before any write. Tiered thresholds signal distance from liquidation.
-          </p>
-          <HealthArtifact />
-        </div>
-      </section>
-
       {/* How it works */}
       <section className="border-y border-border bg-card/30 py-24">
         <div className="max-w-5xl mx-auto px-6">
@@ -150,6 +118,25 @@ export default function Home() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Try asking — single rotating prompt */}
+      <section className="max-w-3xl mx-auto px-6 py-24 w-full">
+        <div className="mb-6">
+          <Eyebrow>Try asking</Eyebrow>
+        </div>
+        <PromptCarousel />
+      </section>
+
+      {/* Your risk */}
+      <section className="max-w-3xl mx-auto px-6 pb-24 w-full">
+        <div className="mb-6">
+          <Eyebrow>Your risk</Eyebrow>
+        </div>
+        <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
+          Check account health before any write. Tiered thresholds signal distance from liquidation.
+        </p>
+        <HealthArtifact />
       </section>
 
       {/* Capabilities */}
