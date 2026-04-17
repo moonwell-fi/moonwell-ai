@@ -84,6 +84,9 @@ const fragmentShader = /* glsl */ `
   uniform float uDensity;
   uniform float uFocusSpeed;
   uniform float uFocusCenter;
+  uniform float uFocusWeight;
+  uniform float uPulseStrength;
+  uniform float uPulseSpeed;
   uniform vec2 uCursor;
 
   void main() {
@@ -92,8 +95,17 @@ const fragmentShader = /* glsl */ `
     float thickness = 0.05 + 0.04 * fwidth(bands);
     float line = 1.0 - smoothstep(thickness, thickness + 0.03, lineDist);
 
+    // Elevation-based focus band (hero's primary moment).
     float focus = uFocusCenter + 0.25 * sin(uTime * uFocusSpeed);
-    float focusBand = 1.0 - smoothstep(0.0, 0.055, abs(vElevation - focus));
+    float focusBand = (1.0 - smoothstep(0.0, 0.055, abs(vElevation - focus))) * uFocusWeight;
+
+    // Radial pulse (footer's primary moment) — a concentric ring expands
+    // from center and fades as it reaches the edge.
+    float ringRadius = mod(uTime * uPulseSpeed, 0.7);
+    float ringDist = abs(length(vUv - 0.5) - ringRadius);
+    float ringGlow = (1.0 - smoothstep(0.0, 0.05, ringDist))
+                   * (1.0 - smoothstep(0.35, 0.7, ringRadius))
+                   * uPulseStrength;
 
     vec2 centered = vUv - 0.5;
     float r = length(centered * vec2(1.3, 1.0));
@@ -105,9 +117,15 @@ const fragmentShader = /* glsl */ `
     vec3 col = uBg;
     col = mix(col, uContour, line * 0.55);
     col = mix(col, uAccent, line * focusBand * 0.9);
+    col = mix(col, uAccent, line * ringGlow * 0.8);
     col = mix(col, uAccent, line * hover * 0.6);
 
-    float alpha = (line * 0.55 + line * focusBand * 0.45 + line * hover * 0.2) * edgeFade;
+    float alpha = (
+      line * 0.55
+      + line * focusBand * 0.45
+      + line * ringGlow * 0.35
+      + line * hover * 0.2
+    ) * edgeFade;
 
     gl_FragColor = vec4(col, alpha);
   }
@@ -119,11 +137,32 @@ type VariantConfig = {
   density: number;
   focusSpeed: number;
   focusCenter: number;
+  focusWeight: number;
+  pulseStrength: number;
+  pulseSpeed: number;
 };
 
 const VARIANT_SHADER: Record<Variant, VariantConfig> = {
-  hero:   { rotationX: -0.9, scale: 3.2, density: 9.0,  focusSpeed: 0.08, focusCenter: 0.22 },
-  footer: { rotationX: -1.15, scale: 5.2, density: 13.0, focusSpeed: 0.04, focusCenter: -0.18 },
+  hero: {
+    rotationX: -0.9,
+    scale: 3.2,
+    density: 9.0,
+    focusSpeed: 0.08,
+    focusCenter: 0.22,
+    focusWeight: 1.0,
+    pulseStrength: 0.0,
+    pulseSpeed: 0.0,
+  },
+  footer: {
+    rotationX: -1.15,
+    scale: 5.2,
+    density: 13.0,
+    focusSpeed: 0.04,
+    focusCenter: -0.18,
+    focusWeight: 0.35,
+    pulseStrength: 0.9,
+    pulseSpeed: 0.09,
+  },
 };
 
 function Terrain({
@@ -148,6 +187,9 @@ function Terrain({
       uScale: { value: config.scale },
       uFocusSpeed: { value: config.focusSpeed },
       uFocusCenter: { value: config.focusCenter },
+      uFocusWeight: { value: config.focusWeight },
+      uPulseStrength: { value: config.pulseStrength },
+      uPulseSpeed: { value: config.pulseSpeed },
       uCursor: { value: new THREE.Vector2(-10, -10) },
     }),
     // Uniforms are created once and mutated in place; variant config is
