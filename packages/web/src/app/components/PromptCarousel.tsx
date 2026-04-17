@@ -10,23 +10,18 @@ const ROTATE_MS = 4000;
 const COPIED_HOLD_MS = 1600;
 
 export default function PromptCarousel() {
-  const defaultIndex = Math.max(
-    0,
-    PROMPT_ORDER.indexOf('yield' as (typeof PROMPT_ORDER)[number])
-  );
+  const defaultIndex = Math.max(0, PROMPT_ORDER.indexOf('yield'));
   const [index, setIndex] = useState<number>(defaultIndex);
   const [paused, setPaused] = useState(false);
   const reduceMotion = useReducedMotion();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const currentId = PROMPT_ORDER[index] as string;
-  const current = SCRIPTS[currentId];
+  const current = SCRIPTS[PROMPT_ORDER[index]];
 
   const [copied, copy] = useCopyToClipboard(current.prompt, COPIED_HOLD_MS);
 
   useEffect(() => {
-    // Pause rotation while feedback is visible so the user sees what they
-    // actually copied.
+    // Pause rotation while feedback is visible so the user sees what they copied.
     if (paused || copied) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       return;
@@ -39,14 +34,10 @@ export default function PromptCarousel() {
     };
   }, [paused, copied]);
 
-  const activate = () => {
-    copy();
-  };
-
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      activate();
+      copy();
     }
   };
 
@@ -59,7 +50,7 @@ export default function PromptCarousel() {
       role="button"
       tabIndex={0}
       aria-label={copied ? `Copied prompt: ${current.prompt}` : `Copy prompt: ${current.prompt}`}
-      onClick={activate}
+      onClick={copy}
       onKeyDown={onKeyDown}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}

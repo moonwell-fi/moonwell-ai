@@ -6,18 +6,19 @@ import {
   PROMPT_ORDER,
   RUN_SCRIPT_EVENT,
   SCRIPTS,
+  ScriptId,
   TERMINAL_READY_EVENT,
   dispatchRunScript,
+  isScriptId,
 } from '../lib/scripts';
 
 export default function ExamplePrompts() {
   const reduceMotion = useReducedMotion();
-  const [selected, setSelected] = useState<string>(PROMPT_ORDER[0]);
+  const [selected, setSelected] = useState<ScriptId>(PROMPT_ORDER[0]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Fallback: if the terminal has already completed before this component
-    // mounts (e.g. hot reload), show cards after a short delay.
+    // Hot-reload fallback: terminal may finish before this mounts.
     const fallback = setTimeout(() => setReady(true), 6000);
     const handler = () => {
       setReady(true);
@@ -33,17 +34,13 @@ export default function ExamplePrompts() {
   useEffect(() => {
     const handler = (e: Event) => {
       const id = (e as CustomEvent<string>).detail;
-      if (id && id in SCRIPTS) setSelected(id);
+      if (isScriptId(id)) setSelected(id);
     };
     window.addEventListener(RUN_SCRIPT_EVENT, handler);
     return () => window.removeEventListener(RUN_SCRIPT_EVENT, handler);
   }, []);
 
-  if (!ready) {
-    // Reserve nothing — the section above the cards stays tight until the
-    // demo finishes. Returning null avoids a layout reservation gap.
-    return null;
-  }
+  if (!ready) return null;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

@@ -9,16 +9,17 @@ export type OutputRow =
   | { type: 'step'; name: string; desc: string }
   | { type: 'blank' };
 
+export type ScriptId = 'yield' | 'supply' | 'rates' | 'health' | 'borrow' | 'rewards';
+
 export type Script = {
-  id: string;
+  id: ScriptId;
   prompt: string;
   command: string;
   scanLine: string;
   rows: OutputRow[];
 };
 
-
-export const SCRIPTS: Record<string, Script> = {
+export const SCRIPTS: Record<ScriptId, Script> = {
   yield: {
     id: 'yield',
     prompt: 'What are the best yield opportunities on Moonwell right now?',
@@ -124,7 +125,7 @@ export const SCRIPTS: Record<string, Script> = {
   },
 };
 
-export const PROMPT_ORDER: ReadonlyArray<keyof typeof SCRIPTS> = [
+export const PROMPT_ORDER: ReadonlyArray<ScriptId> = [
   'yield',
   'supply',
   'rates',
@@ -136,6 +137,10 @@ export const PROMPT_ORDER: ReadonlyArray<keyof typeof SCRIPTS> = [
 export const RUN_SCRIPT_EVENT = 'moonwell:run-script';
 export const TERMINAL_READY_EVENT = 'moonwell:terminal-ready';
 
-export function dispatchRunScript(id: string) {
+export function isScriptId(id: string): id is ScriptId {
+  return id in SCRIPTS;
+}
+
+export function dispatchRunScript(id: ScriptId) {
   window.dispatchEvent(new CustomEvent(RUN_SCRIPT_EVENT, { detail: id }));
 }

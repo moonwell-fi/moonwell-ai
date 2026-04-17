@@ -34,11 +34,33 @@ const STEPS = [
   { step: "03", title: "Review & sign", desc: "Write commands return an unsigned plan with simulation and preview. Pipe to submit, or sign when ready." },
 ];
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
+function Eyebrow({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+    <p className={`font-mono text-[11px] uppercase tracking-[0.2em] text-muted ${className}`}>
       {children}
     </p>
+  );
+}
+
+function InstallSnippet({
+  prefix,
+  prefixColor,
+  copyText,
+  children,
+}: {
+  prefix: '❯' | '$';
+  prefixColor: 'accent' | 'muted';
+  copyText: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
+      <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
+        <span className={`${prefixColor === 'accent' ? 'text-accent' : 'text-muted'} select-none`} aria-hidden="true">{prefix} </span>
+        {children}
+      </span>
+      <CopyButton text={copyText} />
+    </div>
   );
 }
 
@@ -104,9 +126,7 @@ export default function Home() {
       {/* How it works */}
       <section className="border-y border-border bg-card/30 py-24">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="mb-14">
-            <Eyebrow>How it works</Eyebrow>
-          </div>
+          <Eyebrow className="mb-14">How it works</Eyebrow>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-8">
             {STEPS.map((s) => (
               <div key={s.step} className="space-y-3">
@@ -121,9 +141,7 @@ export default function Home() {
 
       {/* Your risk */}
       <section className="max-w-3xl mx-auto px-6 py-24 w-full">
-        <div className="mb-6">
-          <Eyebrow>Your risk</Eyebrow>
-        </div>
+        <Eyebrow className="mb-6">Your risk</Eyebrow>
         <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
           Check account health before any write. Tiered thresholds signal distance from liquidation.
         </p>
@@ -132,9 +150,7 @@ export default function Home() {
 
       {/* Capabilities */}
       <section id="capabilities" className="max-w-5xl mx-auto px-6 py-24 w-full scroll-mt-16">
-        <div className="mb-10">
-          <Eyebrow>Capabilities</Eyebrow>
-        </div>
+        <Eyebrow className="mb-10">Capabilities</Eyebrow>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {CAPABILITIES.map((group) => (
             <div key={group.category} className="bg-card/60 rounded-xl p-6">
@@ -162,31 +178,29 @@ export default function Home() {
       <section id="install" className="relative border-t border-border bg-card/30 py-24 scroll-mt-16 overflow-hidden">
         <LunarTerrain variant="footer" />
         <div className="relative z-10 max-w-xl mx-auto px-6">
-          <div className="mb-10">
-            <Eyebrow>Install</Eyebrow>
-          </div>
+          <Eyebrow className="mb-10">Install</Eyebrow>
           <div className="space-y-8">
             <div>
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Share with your agent</h3>
-              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
-                <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
-                  <span className="text-accent select-none" aria-hidden="true">❯ </span>
-                  <span className="text-foreground">curl</span>
-                  <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
-                </span>
-                <CopyButton text="curl https://agents.moonwell.fi/skill.md" />
-              </div>
+              <InstallSnippet
+                prefix="❯"
+                prefixColor="accent"
+                copyText="curl https://agents.moonwell.fi/skill.md"
+              >
+                <span className="text-foreground">curl</span>
+                <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
+              </InstallSnippet>
             </div>
 
             <div>
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Or install the CLI</h3>
-              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
-                <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
-                  <span className="text-muted select-none" aria-hidden="true">$ </span>
-                  <span className="text-foreground">npm install @moonwell-fi/cli</span>
-                </span>
-                <CopyButton text="npm install @moonwell-fi/cli" />
-              </div>
+              <InstallSnippet
+                prefix="$"
+                prefixColor="muted"
+                copyText="npm install @moonwell-fi/cli"
+              >
+                <span className="text-foreground">npm install @moonwell-fi/cli</span>
+              </InstallSnippet>
             </div>
 
             <div className="pt-2 mt-2 border-t border-border/40">

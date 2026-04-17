@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 import { RotateCw } from 'lucide-react';
 import {
   RUN_SCRIPT_EVENT,
   SCRIPTS,
   TERMINAL_READY_EVENT,
+  isScriptId,
   type OutputColor,
   type OutputRow,
   type Script,
@@ -41,8 +42,8 @@ const COLOR_CLASS: Record<OutputColor, string> = {
 
 function ValueCell({ value, color }: { value: string; color: OutputColor }) {
   const reduceMotion = useReducedMotion();
-  // Values that settle to green animate from accent → green to match the
-  // CLI's "simulated ✓" moment without breaking the one-font-size rule.
+  // Green values animate accent → green to echo the CLI's "simulated ✓" moment
+  // without breaking the one-font-size rule (AGENTS.md #9).
   if (color === 'green' && !reduceMotion) {
     return (
       <motion.span
@@ -148,9 +149,6 @@ export default function TerminalDemo() {
     };
 
     if (rerun) {
-      // Skip typing: the prompt text is swapped via per-character blur-fade
-      // transitions in the render path. Hold briefly so the morph reads
-      // before the scan begins.
       setTyped(next.prompt);
       setPhase('morphing');
       schedule(runResults, 420);
@@ -182,9 +180,6 @@ export default function TerminalDemo() {
         for (const entry of entries) {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !startedRef.current) {
             startedRef.current = true;
-            // Initial auto-play uses the default script (yield). Subsequent
-            // script changes come in via the RUN_SCRIPT_EVENT handler, which
-            // calls run() directly with the new script.
             run(SCRIPTS.yield);
             io.disconnect();
           }
@@ -199,16 +194,13 @@ export default function TerminalDemo() {
       timersRef.current.forEach(clearTimeout);
       timersRef.current = [];
     };
-    // Deliberately exclude `script` — this effect only needs to fire the
-    // initial intersection run. Including it would retrigger cleanup on
-    // every prompt click and clear the timers we just scheduled.
   }, [run]);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const id = (e as CustomEvent<string>).detail;
+      if (!isScriptId(id)) return;
       const next = SCRIPTS[id];
-      if (!next) return;
       setScript(next);
       setRunCount((n) => n + 1);
       run(next, { rerun: true });
@@ -221,9 +213,8 @@ export default function TerminalDemo() {
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
-    // Ratchet: the card height only grows. Once the terminal has expanded
-    // for a long-output script, shorter runs don't shrink it back and pull
-    // the cards below upward.
+    // Height is a ratchet: grows with long-output scripts, never shrinks,
+    // so prompt cards below don't yank upward between runs.
     const update = () => {
       const measured = Math.max(el.getBoundingClientRect().height, MIN_HEIGHT);
       if (measured <= lastHRef.current) return;
@@ -237,12 +228,8 @@ export default function TerminalDemo() {
     return () => ro.disconnect();
   }, [reduceMotion, heightTarget]);
 
-  const showTypingCaret = phase === 'typing';
-  const showReadyCaret = phase === 'complete';
-
-  // Once the first-ever run reaches complete, broadcast so the prompt cards
-  // (below the terminal in the hero) can stagger-fade in without competing
-  // with the typing animation.
+  // Broadcast once on first complete so prompt cards can stagger in
+  // without competing with the typing animation.
   useEffect(() => {
     if (phase === 'complete' && !readyDispatchedRef.current) {
       readyDispatchedRef.current = true;
@@ -293,7 +280,7 @@ export default function TerminalDemo() {
           ) : (
             <PromptText text={script.prompt} runCount={runCount} reduceMotion={!!reduceMotion} />
           )}
-          {showTypingCaret && <span className={CARET_CLASS} />}
+          {phase === 'typing' && <span className={CARET_CLASS} />}
         </div>
 
         <AnimatePresence>
@@ -326,7 +313,7 @@ export default function TerminalDemo() {
         </div>
 
         <AnimatePresence>
-          {showReadyCaret && (
+          {phase === 'complete' && (
             <motion.div
               key="ready"
               className="pt-1"
@@ -364,7 +351,7 @@ export default function TerminalDemo() {
   );
 }
 
-function PromptText({
+const PromptText = memo(function PromptText({
   text,
   runCount,
   reduceMotion,
@@ -379,9 +366,8 @@ function PromptText({
   return (
     <span className="text-foreground">
       {Array.from(text).map((ch, idx) => {
-        // Render real spaces as plain text nodes (not wrapped in a motion.span)
-        // so the browser can break the line at those positions on narrow
-        // viewports. Non-space characters get their per-char blur-fade.
+        // Real spaces stay as plain text nodes so the browser can wrap there
+        // on narrow viewports; non-spaces get the per-char blur-fade.
         if (ch === ' ') {
           return <span key={`${runCount}-${idx}-sp`}>{' '}</span>;
         }
@@ -402,7 +388,7 @@ function PromptText({
       })}
     </span>
   );
-}
+});
 
 function ScanDots() {
   return (
