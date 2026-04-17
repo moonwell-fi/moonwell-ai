@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 import { RotateCw } from 'lucide-react';
 
@@ -13,6 +13,7 @@ const RESULTS = [
 
 type Phase = 'idle' | 'typing' | 'scanning' | 'results' | 'complete';
 
+const MIN_HEIGHT = 176;
 const rowSpring = { type: 'spring' as const, stiffness: 180, damping: 22 };
 const rowEnter = {
   initial: { opacity: 0, y: 10, filter: 'blur(5px)' },
@@ -20,11 +21,13 @@ const rowEnter = {
 };
 
 function typingDelay(ch: string): number {
-  // variable cadence: quick for letters, longer on punctuation/spaces
   const base = 32 + Math.random() * 38;
   if (ch === ' ') return base + 80 + Math.random() * 70;
   return base;
 }
+
+const CARET_CLASS =
+  'inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink';
 
 export default function TerminalDemo() {
   const reduceMotion = useReducedMotion();
@@ -32,6 +35,7 @@ export default function TerminalDemo() {
   const contentRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const startedRef = useRef(false);
+  const lastHRef = useRef(MIN_HEIGHT);
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [typed, setTyped] = useState('');
@@ -39,23 +43,14 @@ export default function TerminalDemo() {
   const [hovering, setHovering] = useState(false);
   const [runCount, setRunCount] = useState(0);
 
-  // Animated height — driven by a spring that lives outside React so the
-  // per-frame interpolation never triggers a re-render.
-  const heightTarget = useMotionValue(176);
+  // Spring lives outside React so height interpolation never triggers a
+  // re-render and avoids framer's layout FLIP transform.
+  const heightTarget = useMotionValue(MIN_HEIGHT);
   const height = useSpring(heightTarget, { stiffness: 200, damping: 28, mass: 0.9 });
 
-  function schedule(fn: () => void, ms: number) {
-    const id = setTimeout(fn, ms);
-    timersRef.current.push(id);
-  }
-
-  function clearAll() {
+  const run = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
-  }
-
-  function run() {
-    clearAll();
     setTyped('');
     setRowsShown(0);
 
@@ -65,6 +60,10 @@ export default function TerminalDemo() {
       setRowsShown(RESULTS.length);
       return;
     }
+
+    const schedule = (fn: () => void, ms: number) => {
+      timersRef.current.push(setTimeout(fn, ms));
+    };
 
     setPhase('typing');
     let i = 0;
@@ -86,7 +85,7 @@ export default function TerminalDemo() {
       schedule(typeNext, typingDelay(ch));
     };
     typeNext();
-  }
+  }, [reduceMotion]);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -108,41 +107,32 @@ export default function TerminalDemo() {
 
     return () => {
       io.disconnect();
-      clearAll();
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [run]);
 
-  // Re-run when user clicks rerun button
   useEffect(() => {
     if (runCount === 0) return;
     run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runCount]);
+  }, [runCount, run]);
 
-  // Measure content height and push it into the spring target. The spring
-  // interpolates to this value frame-by-frame outside the React tree so
-  // text never scales and the card never re-renders during the morph.
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
     const update = () => {
-      const h = Math.max(el.getBoundingClientRect().height, 176);
-      if (reduceMotion) {
-        heightTarget.jump(h);
-      } else {
-        heightTarget.set(h);
-      }
+      const h = Math.max(el.getBoundingClientRect().height, MIN_HEIGHT);
+      if (h === lastHRef.current) return;
+      lastHRef.current = h;
+      if (reduceMotion) heightTarget.jump(h);
+      else heightTarget.set(h);
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduceMotion]);
+  }, [reduceMotion, heightTarget]);
 
-  // Caret only trails the active typing. Once the command is submitted it
-  // goes away; when the session settles, a fresh blank prompt gets it back.
   const showTypingCaret = phase === 'typing';
   const showReadyCaret = phase === 'complete';
 
@@ -154,16 +144,14 @@ export default function TerminalDemo() {
       style={{ height }}
       className="relative font-mono text-sm overflow-hidden"
     >
-      {/* Screen-reader summary — renders full content instantly */}
-      <p className="sr-only" aria-live="polite">
-        {phase === 'complete'
-          ? `Terminal: ${COMMAND}. Scanned Base markets. ${RESULTS.map(
-              (r) => `${r.symbol} ${r.apy}, ${r.tvl}`
-            ).join('. ')}.`
-          : ''}
-      </p>
+      {phase === 'complete' && (
+        <p className="sr-only" aria-live="polite">
+          {`Terminal: ${COMMAND}. Scanned Base markets. ${RESULTS.map(
+            (r) => `${r.symbol} ${r.apy}, ${r.tvl}`
+          ).join('. ')}.`}
+        </p>
+      )}
 
-      {/* Scanline sweep — one pass during scanning phase */}
       <AnimatePresence>
         {phase === 'scanning' && !reduceMotion && (
           <motion.div
@@ -186,19 +174,12 @@ export default function TerminalDemo() {
       </AnimatePresence>
 
       <div ref={contentRef} className="relative px-5 py-4 space-y-2" aria-hidden="true">
-        {/* Submitted prompt line */}
         <div>
-          <span className="text-accent select-none" aria-hidden="true">❯ </span>
+          <span className="text-accent select-none">❯ </span>
           <span className="text-foreground">{typed}</span>
-          {showTypingCaret && (
-            <span
-              className="inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink"
-              aria-hidden="true"
-            />
-          )}
+          {showTypingCaret && <span className={CARET_CLASS} />}
         </div>
 
-        {/* Scanning line */}
         <AnimatePresence>
           {(phase === 'scanning' || phase === 'results' || phase === 'complete') && (
             <motion.div
@@ -207,14 +188,13 @@ export default function TerminalDemo() {
               {...rowEnter}
               transition={reduceMotion ? { duration: 0 } : rowSpring}
             >
-              <span className="select-none" aria-hidden="true">↳ </span>
+              <span className="select-none">↳ </span>
               scanning Base markets
               {phase === 'scanning' ? <ScanDots /> : <span className="select-none">&hellip;</span>}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Result rows */}
         <div className="space-y-1.5 ml-4 pt-1">
           <AnimatePresence>
             {RESULTS.slice(0, rowsShown).map((r) => (
@@ -233,7 +213,6 @@ export default function TerminalDemo() {
           </AnimatePresence>
         </div>
 
-        {/* Fresh prompt line after the session settles */}
         <AnimatePresence>
           {showReadyCaret && (
             <motion.div
@@ -243,17 +222,13 @@ export default function TerminalDemo() {
               animate={{ opacity: 1, y: 0 }}
               transition={reduceMotion ? { duration: 0 } : { duration: 0.25, delay: 0.15 }}
             >
-              <span className="text-accent select-none" aria-hidden="true">❯ </span>
-              <span
-                className="inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink"
-                aria-hidden="true"
-              />
+              <span className="text-accent select-none">❯ </span>
+              <span className={CARET_CLASS} />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Rerun affordance — appears after completion on hover */}
       <AnimatePresence>
         {phase === 'complete' && hovering && (
           <motion.button
@@ -278,22 +253,11 @@ export default function TerminalDemo() {
 }
 
 function ScanDots() {
-  const reduceMotion = useReducedMotion();
-  if (reduceMotion) return <span className="select-none">&hellip;</span>;
   return (
-    <span className="inline-block w-[1.25em] select-none" aria-hidden="true">
-      <motion.span
-        animate={{ opacity: [0, 1, 1, 1, 0] }}
-        transition={{ duration: 1.4, repeat: Infinity, times: [0, 0.25, 0.5, 0.75, 1] }}
-      >.</motion.span>
-      <motion.span
-        animate={{ opacity: [0, 0, 1, 1, 0] }}
-        transition={{ duration: 1.4, repeat: Infinity, times: [0, 0.25, 0.5, 0.75, 1] }}
-      >.</motion.span>
-      <motion.span
-        animate={{ opacity: [0, 0, 0, 1, 0] }}
-        transition={{ duration: 1.4, repeat: Infinity, times: [0, 0.25, 0.5, 0.75, 1] }}
-      >.</motion.span>
+    <span className="inline-block w-[1.25em] select-none">
+      <span className="scan-dot">.</span>
+      <span className="scan-dot">.</span>
+      <span className="scan-dot">.</span>
     </span>
   );
 }
@@ -305,8 +269,11 @@ function ResultCheck() {
       className="shrink-0 select-none"
       initial={reduceMotion ? false : { color: 'var(--accent)', filter: 'blur(3px)' }}
       animate={{ color: 'var(--green)', filter: 'blur(0px)' }}
-      transition={reduceMotion ? { duration: 0 } : { color: { delay: 0.22, duration: 0.45 }, filter: { duration: 0.22 } }}
-      aria-hidden="true"
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : { color: { delay: 0.22, duration: 0.45 }, filter: { duration: 0.22 } }
+      }
     >
       ✓
     </motion.span>

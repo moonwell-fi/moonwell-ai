@@ -166,6 +166,7 @@ export default function LunarTerrain() {
         dpr={[1, 1.6]}
         camera={{ position: [0, 0, 3.2], fov: 42 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
+        frameloop={reduceMotion ? 'demand' : 'always'}
       >
         <Terrain reduceMotion={reduceMotion} />
       </Canvas>
