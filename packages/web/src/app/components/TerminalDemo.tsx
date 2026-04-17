@@ -114,7 +114,10 @@ export default function TerminalDemo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runCount]);
 
-  const showCaret = phase === 'typing' || phase === 'scanning' || phase === 'complete';
+  // Caret only trails the active typing. Once the command is submitted it
+  // goes away; when the session settles, a fresh blank prompt gets it back.
+  const showTypingCaret = phase === 'typing';
+  const showReadyCaret = phase === 'complete';
 
   return (
     <div
@@ -155,11 +158,11 @@ export default function TerminalDemo() {
       </AnimatePresence>
 
       <div className="relative space-y-2" aria-hidden="true">
-        {/* Prompt line */}
+        {/* Submitted prompt line */}
         <div>
           <span className="text-accent select-none" aria-hidden="true">❯ </span>
           <span className="text-foreground">{typed}</span>
-          {showCaret && (
+          {showTypingCaret && (
             <span
               className="inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink"
               aria-hidden="true"
@@ -186,12 +189,12 @@ export default function TerminalDemo() {
         {/* Result rows */}
         <div className="space-y-1.5 ml-4 pt-1">
           <AnimatePresence>
-            {RESULTS.slice(0, rowsShown).map((r, idx) => (
+            {RESULTS.slice(0, rowsShown).map((r) => (
               <motion.div
                 key={`${r.symbol}-${runCount}`}
                 className="flex gap-2"
                 {...rowEnter}
-                transition={reduceMotion ? { duration: 0 } : { ...rowSpring, delay: idx === rowsShown - 1 ? 0 : 0 }}
+                transition={reduceMotion ? { duration: 0 } : rowSpring}
               >
                 <ResultCheck />
                 <span className="text-foreground w-14">{r.symbol}</span>
@@ -201,6 +204,25 @@ export default function TerminalDemo() {
             ))}
           </AnimatePresence>
         </div>
+
+        {/* Fresh prompt line after the session settles */}
+        <AnimatePresence>
+          {showReadyCaret && (
+            <motion.div
+              key="ready"
+              className="pt-1"
+              initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.25, delay: 0.15 }}
+            >
+              <span className="text-accent select-none" aria-hidden="true">❯ </span>
+              <span
+                className="inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink"
+                aria-hidden="true"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Rerun affordance — appears after completion on hover */}
