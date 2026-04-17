@@ -53,7 +53,7 @@ export default function Home() {
           <span className="font-mono text-sm font-medium">
             <span className="text-accent">agents</span>.moonwell.fi
           </span>
-          <div className="flex items-center gap-6 text-sm text-muted">
+          <div className="flex items-center gap-4 sm:gap-6 text-sm text-muted">
             <a href="#capabilities" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Capabilities</a>
             <a href="#install" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Install</a>
             <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">GitHub</a>
@@ -71,11 +71,11 @@ export default function Home() {
           A CLI and skill that lets any AI agent read Moonwell markets and prepare transactions. You sign.
         </p>
 
-        <div className="mt-10 flex items-center gap-4">
+        <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-sm sm:w-auto sm:max-w-none">
           <CopySkillButton />
           <a
             href="#capabilities"
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground"
+            className="inline-flex items-center justify-center sm:justify-start gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground"
           >
             See capabilities <span aria-hidden="true">→</span>
           </a>
