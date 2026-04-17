@@ -224,12 +224,15 @@ export default function TerminalDemo() {
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
+    // Ratchet: the card height only grows. Once the terminal has expanded
+    // for a long-output script, shorter runs don't shrink it back and pull
+    // the cards below upward.
     const update = () => {
-      const h = Math.max(el.getBoundingClientRect().height, MIN_HEIGHT);
-      if (h === lastHRef.current) return;
-      lastHRef.current = h;
-      if (reduceMotion) heightTarget.jump(h);
-      else heightTarget.set(h);
+      const measured = Math.max(el.getBoundingClientRect().height, MIN_HEIGHT);
+      if (measured <= lastHRef.current) return;
+      lastHRef.current = measured;
+      if (reduceMotion) heightTarget.jump(measured);
+      else heightTarget.set(measured);
     };
     update();
     const ro = new ResizeObserver(update);
