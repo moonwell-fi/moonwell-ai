@@ -190,8 +190,8 @@ export default function Home() {
           <div className="space-y-8">
             <div>
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Share with your agent</h3>
-              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-center gap-3">
-                <span className="flex-1 overflow-x-auto">
+              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
+                <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
                   <span className="text-muted select-none" aria-hidden="true">$ </span>
                   <span className="text-foreground">curl</span>
                   <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
@@ -202,9 +202,10 @@ export default function Home() {
 
             <div>
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Or install the CLI</h3>
-              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-center gap-3">
-                <span className="flex-1">
-                  <span className="text-muted select-none" aria-hidden="true">$ </span><span className="text-foreground">npm install @moonwell-fi/cli</span>
+              <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
+                <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
+                  <span className="text-muted select-none" aria-hidden="true">$ </span>
+                  <span className="text-foreground">npm install @moonwell-fi/cli</span>
                 </span>
                 <CopyButton text="npm install @moonwell-fi/cli" />
               </div>
@@ -216,7 +217,7 @@ export default function Home() {
                 Then prepare &amp; submit in one pipe
               </h3>
               <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
-                <span className="flex-1 leading-6">
+                <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
                   <span className="text-muted select-none" aria-hidden="true">$ </span>
                   <span className="text-foreground">moonwell supply --asset USDC --amount-decimal 50 --json </span>
                   <span className="text-muted">| </span>
