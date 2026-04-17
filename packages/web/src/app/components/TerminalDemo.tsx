@@ -182,7 +182,10 @@ export default function TerminalDemo() {
         for (const entry of entries) {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !startedRef.current) {
             startedRef.current = true;
-            run(script);
+            // Initial auto-play uses the default script (yield). Subsequent
+            // script changes come in via the RUN_SCRIPT_EVENT handler, which
+            // calls run() directly with the new script.
+            run(SCRIPTS.yield);
             io.disconnect();
           }
         }
@@ -196,7 +199,10 @@ export default function TerminalDemo() {
       timersRef.current.forEach(clearTimeout);
       timersRef.current = [];
     };
-  }, [run, script]);
+    // Deliberately exclude `script` — this effect only needs to fire the
+    // initial intersection run. Including it would retrigger cleanup on
+    // every prompt click and clear the timers we just scheduled.
+  }, [run]);
 
   useEffect(() => {
     const handler = (e: Event) => {
