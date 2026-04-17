@@ -121,7 +121,7 @@ export default function TerminalDemo() {
       ref={rootRef}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      className="relative px-5 py-4 font-mono text-sm"
+      className="relative px-5 py-4 font-mono text-sm min-h-[11rem]"
     >
       {/* Screen-reader summary — renders full content instantly */}
       <p className="sr-only" aria-live="polite">
