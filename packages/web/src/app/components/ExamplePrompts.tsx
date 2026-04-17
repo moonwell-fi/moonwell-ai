@@ -16,11 +16,14 @@ export default function ExamplePrompts() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const handler = () => setReady(true);
-    window.addEventListener(TERMINAL_READY_EVENT, handler);
     // Fallback: if the terminal has already completed before this component
     // mounts (e.g. hot reload), show cards after a short delay.
     const fallback = setTimeout(() => setReady(true), 6000);
+    const handler = () => {
+      setReady(true);
+      clearTimeout(fallback);
+    };
+    window.addEventListener(TERMINAL_READY_EVENT, handler);
     return () => {
       window.removeEventListener(TERMINAL_READY_EVENT, handler);
       clearTimeout(fallback);
@@ -64,7 +67,7 @@ export default function ExamplePrompts() {
             aria-pressed={isSelected}
             className={`text-left ${
               isSelected ? 'bg-card' : 'bg-card/50'
-            } rounded-md px-4 py-2.5 font-mono text-sm hover:bg-card transition-colors duration-150 cursor-pointer group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+            } rounded-md px-4 py-2.5 font-mono text-sm hover:bg-card transition-colors duration-150 cursor-pointer group focus-ring-btn`}
           >
             <span className="text-accent select-none" aria-hidden="true">❯ </span>
             <span

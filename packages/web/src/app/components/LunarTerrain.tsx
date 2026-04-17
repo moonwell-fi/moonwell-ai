@@ -14,6 +14,32 @@ type Variant = 'hero' | 'footer';
  * shader work; the plane is static geometry, all motion lives in uniforms.
  */
 
+// Shared across every LunarTerrain instance — a single window pointermove
+// listener feeds one mutable ref read by every Canvas. Sentinel (-10, -10)
+// means no real input yet.
+const sharedPointer: Vec2 = { x: -10, y: -10 };
+let listenerCount = 0;
+let detachListener: (() => void) | null = null;
+
+function subscribePointer(): () => void {
+  listenerCount += 1;
+  if (listenerCount === 1) {
+    const onMove = (e: PointerEvent) => {
+      sharedPointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      sharedPointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    detachListener = () => window.removeEventListener('pointermove', onMove);
+  }
+  return () => {
+    listenerCount -= 1;
+    if (listenerCount === 0 && detachListener) {
+      detachListener();
+      detachListener = null;
+    }
+  };
+}
+
 const vertexShader = /* glsl */ `
   varying float vElevation;
   varying vec2 vUv;
@@ -167,11 +193,9 @@ const VARIANT_SHADER: Record<Variant, VariantConfig> = {
 
 function Terrain({
   reduceMotion,
-  pointerRef,
   config,
 }: {
   reduceMotion: boolean;
-  pointerRef: React.RefObject<Vec2>;
   config: VariantConfig;
 }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
@@ -210,7 +234,7 @@ function Terrain({
           (mat.current.uniforms.uSweepAngle.value + delta * SWEEP_SPEED) %
           (Math.PI * 2);
       }
-      const p = pointerRef.current;
+      const p = sharedPointer;
       if (p.x > -5 && p.y > -5) {
         const tx = p.x * 0.08;
         const ty = p.y * 0.06;
@@ -240,7 +264,6 @@ function Terrain({
 
 export default function LunarTerrain({ variant = 'hero' }: { variant?: Variant }) {
   const reduceMotion = useReducedMotion() ?? false;
-  const pointerRef = useRef<Vec2>({ x: -10, y: -10 });
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Footer variant defers WebGL mount until it scrolls into view so we don't
   // spin up a second Canvas on initial page load.
@@ -248,12 +271,7 @@ export default function LunarTerrain({ variant = 'hero' }: { variant?: Variant }
 
   useEffect(() => {
     if (reduceMotion) return;
-    const onMove = (e: PointerEvent) => {
-      pointerRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointerRef.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onMove);
+    return subscribePointer();
   }, [reduceMotion]);
 
   useEffect(() => {
@@ -307,11 +325,7 @@ export default function LunarTerrain({ variant = 'hero' }: { variant?: Variant }
           gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
           frameloop={reduceMotion ? 'demand' : 'always'}
         >
-          <Terrain
-            reduceMotion={reduceMotion}
-            pointerRef={pointerRef}
-            config={VARIANT_SHADER[variant]}
-          />
+          <Terrain reduceMotion={reduceMotion} config={VARIANT_SHADER[variant]} />
         </Canvas>
       )}
     </div>

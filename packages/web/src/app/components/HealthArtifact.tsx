@@ -1,5 +1,5 @@
-// Natural-language prompt shown to the reader. The agent translates this
-// into: moonwell health --address 0x...
+import TerminalCard from './TerminalCard';
+
 const PROMPT = 'Check my health factor on Moonwell';
 
 const FIELDS: Array<[string, string, string?]> = [
@@ -19,14 +19,7 @@ const THRESHOLDS: Array<[string, string, string]> = [
 
 export default function HealthArtifact() {
   return (
-    <div className="border border-border rounded-xl bg-card overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-background/60">
-        <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
-        <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
-        <div className="w-2.5 h-2.5 rounded-full bg-border" aria-hidden="true" />
-        <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
-      </div>
-
+    <TerminalCard>
       <div className="px-5 py-4 font-mono text-sm space-y-0.5">
         <div className="leading-6 pl-[2ch] -indent-[2ch] mb-2">
           <span className="text-accent select-none" aria-hidden="true">❯ </span>
@@ -54,6 +47,6 @@ export default function HealthArtifact() {
           </div>
         ))}
       </div>
-    </div>
+    </TerminalCard>
   );
 }

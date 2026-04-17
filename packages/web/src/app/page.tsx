@@ -1,6 +1,7 @@
 import CopySkillButton from './components/CopySkillButton';
 import CopyButton from './components/CopyButton';
 import TerminalDemo from './components/TerminalDemo';
+import TerminalCard from './components/TerminalCard';
 import LunarTerrain from './components/LunarTerrainMount';
 import HealthArtifact from './components/HealthArtifact';
 import ExamplePrompts from './components/ExamplePrompts';
@@ -51,14 +52,14 @@ export default function Home() {
           <a
             href="#top"
             aria-label="Moonwell agents — back to top"
-            className="font-mono text-sm font-medium hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground"
+            className="font-mono text-sm font-medium hover:text-foreground transition-colors duration-150 focus-ring-link"
           >
             <span className="text-accent">agents</span>.moonwell.fi
           </a>
           <div className="flex items-center gap-4 sm:gap-6 text-sm text-muted">
-            <a href="#capabilities" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Capabilities</a>
-            <a href="#install" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Install</a>
-            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">GitHub</a>
+            <a href="#capabilities" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Capabilities</a>
+            <a href="#install" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Install</a>
+            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 focus-ring-link">GitHub</a>
           </div>
         </div>
       </nav>
@@ -82,26 +83,18 @@ export default function Home() {
             <CopySkillButton />
             <a
               href="#capabilities"
-              className="inline-flex items-center justify-center sm:justify-start gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground"
+              className="inline-flex items-center justify-center sm:justify-start gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors duration-150 focus-ring-link"
             >
               See capabilities <span aria-hidden="true">→</span>
             </a>
           </div>
 
-          {/* Agent session terminal card — as editorial artifact */}
           <div className="w-full max-w-2xl mt-16">
-            <div className="border border-border rounded-xl bg-card overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-background/60">
-                <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
-              </div>
+            <TerminalCard>
               <TerminalDemo />
-            </div>
+            </TerminalCard>
           </div>
 
-          {/* Example prompts — revealed after the first demo run completes */}
           <div className="w-full max-w-2xl mt-5">
             <ExamplePrompts />
           </div>
@@ -212,9 +205,9 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
           <span className="font-mono">agents.moonwell.fi</span>
           <div className="flex gap-6">
-            <a href="https://moonwell.fi" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Moonwell</a>
-            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">GitHub</a>
-            <a href="/skill.md" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Skill</a>
+            <a href="https://moonwell.fi" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Moonwell</a>
+            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 focus-ring-link">GitHub</a>
+            <a href="/skill.md" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Skill</a>
           </div>
         </div>
       </footer>

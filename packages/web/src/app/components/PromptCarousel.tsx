@@ -65,7 +65,7 @@ export default function PromptCarousel() {
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
-      className="relative bg-card/60 hover:bg-card rounded-lg px-5 py-5 font-mono text-sm cursor-pointer transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent overflow-hidden"
+      className="relative bg-card/60 hover:bg-card rounded-lg px-5 py-5 font-mono text-sm cursor-pointer transition-colors duration-150 focus-ring-btn overflow-hidden"
     >
       <div className="flex items-start gap-2 min-h-[1.5rem]">
         <span className="relative inline-flex w-4 h-5 items-center justify-center shrink-0 select-none" aria-hidden="true">

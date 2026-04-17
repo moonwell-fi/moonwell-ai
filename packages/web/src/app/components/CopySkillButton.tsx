@@ -12,7 +12,7 @@ export default function CopySkillButton() {
     <button
       onClick={copy}
       aria-label={copied ? 'Copied skill URL' : 'Copy skill URL'}
-      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-lg bg-accent text-white text-base font-semibold hover:bg-accent-hover transition-colors duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-lg bg-accent text-white text-base font-semibold hover:bg-accent-hover transition-colors duration-150 cursor-pointer focus-ring-btn"
     >
       {/* Width anchor so the label swap doesn't reflow the button */}
       <span className="relative inline-block">

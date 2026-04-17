@@ -94,8 +94,6 @@ function RowRenderer({ row }: { row: OutputRow }) {
           <span className="text-muted">{row.desc}</span>
         </div>
       );
-    case 'dim':
-      return <div className="pl-8 text-muted">{row.text}</div>;
     case 'blank':
       return <div>&nbsp;</div>;
   }
@@ -211,7 +209,6 @@ export default function TerminalDemo() {
       const id = (e as CustomEvent<string>).detail;
       const next = SCRIPTS[id];
       if (!next) return;
-      startedRef.current = true;
       setScript(next);
       setRunCount((n) => n + 1);
       run(next, { rerun: true });
@@ -349,12 +346,11 @@ export default function TerminalDemo() {
           <motion.button
             key="rerun"
             onClick={() => {
-              startedRef.current = true;
               setRunCount((n) => n + 1);
               run(script, { rerun: true });
             }}
             aria-label="Rerun terminal demo"
-            className="absolute bottom-3 right-3 inline-flex items-center justify-center h-7 w-7 rounded-md text-muted hover:text-accent transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
+            className="absolute bottom-3 right-3 inline-flex items-center justify-center h-7 w-7 rounded-md text-muted hover:text-accent transition-colors duration-150 focus-ring-btn cursor-pointer"
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.92 }}

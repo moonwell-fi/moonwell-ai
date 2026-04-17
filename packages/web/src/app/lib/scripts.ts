@@ -7,7 +7,6 @@ export type OutputRow =
   | { type: 'kv'; key: string; value: string; valueColor?: OutputColor }
   | { type: 'kvkv'; k1: string; v1: string; k2: string; v2: string }
   | { type: 'step'; name: string; desc: string }
-  | { type: 'dim'; text: string }
   | { type: 'blank' };
 
 export type Script = {
