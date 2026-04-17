@@ -12,7 +12,7 @@ function Field({ k, v }: { k: string; v: React.ReactNode }) {
 function LegendRow({ range, label, className }: { range: string; label: string; className: string }) {
   return (
     <div className="flex gap-3">
-      <span className={`w-20 shrink-0 ${className}`}>{range}</span>
+      <span className={`w-24 shrink-0 ${className}`}>{range}</span>
       <span className="text-muted">{label}</span>
     </div>
   );
@@ -46,17 +46,17 @@ export default function HealthArtifact() {
         </div>
 
         {/* Health factor headline */}
-        <div className="pt-2 flex items-baseline gap-3">
+        <div className="pt-2 flex items-baseline gap-2">
           <span className="text-muted w-32 shrink-0">health factor</span>
-          <span className="text-green text-lg font-semibold">4.58</span>
-          <span className="inline-flex items-center gap-1 text-green text-xs">
-            <Check size={12} strokeWidth={2.5} aria-hidden="true" />
+          <span className="text-green font-semibold">4.58</span>
+          <span className="inline-flex items-center gap-1 text-green">
+            <Check size={14} strokeWidth={2.5} aria-hidden="true" />
             healthy
           </span>
         </div>
 
         {/* Legend */}
-        <div className="pt-1 text-xs space-y-1">
+        <div className="pt-1 space-y-1">
           <LegendRow range="> 1.5" label="healthy" className="text-green" />
           <LegendRow range="1.1 – 1.5" label="caution" className="text-orange" />
           <LegendRow range="< 1.1" label="liquidation risk" className="text-red" />
