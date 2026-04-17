@@ -29,6 +29,7 @@ function typingDelay(ch: string): number {
 export default function TerminalDemo() {
   const reduceMotion = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const startedRef = useRef(false);
 
@@ -37,6 +38,7 @@ export default function TerminalDemo() {
   const [rowsShown, setRowsShown] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [runCount, setRunCount] = useState(0);
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
 
   function schedule(fn: () => void, ms: number) {
     const id = setTimeout(fn, ms);
@@ -114,6 +116,19 @@ export default function TerminalDemo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runCount]);
 
+  // Measure content height so the shell can animate its own height via
+  // a real pixel value — avoids framer-motion's `layout` FLIP transform
+  // that otherwise distorts text and shadows.
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const update = () => setContentHeight(el.getBoundingClientRect().height);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Caret only trails the active typing. Once the command is submitted it
   // goes away; when the session settles, a fresh blank prompt gets it back.
   const showTypingCaret = phase === 'typing';
@@ -122,11 +137,16 @@ export default function TerminalDemo() {
   return (
     <motion.div
       ref={rootRef}
-      layout
-      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 28 }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      className="relative px-5 py-4 font-mono text-sm min-h-[11rem]"
+      animate={
+        contentHeight != null
+          ? { height: Math.max(contentHeight, 176) }
+          : undefined
+      }
+      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 28 }}
+      className="relative font-mono text-sm overflow-hidden"
+      style={{ minHeight: '11rem' }}
     >
       {/* Screen-reader summary — renders full content instantly */}
       <p className="sr-only" aria-live="polite">
@@ -159,7 +179,7 @@ export default function TerminalDemo() {
         )}
       </AnimatePresence>
 
-      <div className="relative space-y-2" aria-hidden="true">
+      <div ref={contentRef} className="relative px-5 py-4 space-y-2" aria-hidden="true">
         {/* Submitted prompt line */}
         <div>
           <span className="text-accent select-none" aria-hidden="true">❯ </span>
