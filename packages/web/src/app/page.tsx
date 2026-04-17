@@ -191,9 +191,13 @@ export default function Home() {
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Share with your agent</h3>
               <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
                 <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
-                  <span className="text-muted select-none" aria-hidden="true">$ </span>
+                  <span className="text-accent select-none" aria-hidden="true">❯ </span>
                   <span className="text-foreground">curl</span>
                   <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
+                  <span
+                    className="inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink"
+                    aria-hidden="true"
+                  />
                 </span>
                 <CopyButton text="curl https://agents.moonwell.fi/skill.md" />
               </div>

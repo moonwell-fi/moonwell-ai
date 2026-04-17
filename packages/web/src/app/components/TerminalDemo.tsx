@@ -272,7 +272,17 @@ export default function TerminalDemo() {
       </AnimatePresence>
 
       <div ref={contentRef} className="relative px-5 py-4 space-y-1" aria-hidden="true">
-        <div className="leading-6 pl-[2ch] -indent-[2ch]">
+        <motion.div
+          className="leading-6 pl-[2ch] -indent-[2ch]"
+          animate={
+            reduceMotion
+              ? undefined
+              : phase === 'scanning'
+                ? { filter: 'blur(1.5px)', opacity: 0.7 }
+                : { filter: 'blur(0px)', opacity: 1 }
+          }
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
           <span className="text-accent select-none">❯ </span>
           {phase === 'typing' || phase === 'idle' ? (
             <span className="text-foreground">{typed}</span>
@@ -280,7 +290,7 @@ export default function TerminalDemo() {
             <PromptText text={script.prompt} runCount={runCount} reduceMotion={!!reduceMotion} />
           )}
           {showTypingCaret && <span className={CARET_CLASS} />}
-        </div>
+        </motion.div>
 
         <AnimatePresence>
           {(phase === 'scanning' || phase === 'results' || phase === 'complete') && (
@@ -366,20 +376,17 @@ function PromptText({
     <span className="text-foreground">
       {Array.from(text).map((ch, idx) => (
         <motion.span
-          // Key by runCount + idx so every rerun remounts each glyph and
-          // replays the blur-fade even when the character at that position
-          // hasn't changed.
+          // Key by runCount + idx so every rerun remounts each glyph.
           key={`${runCount}-${idx}`}
-          initial={{ opacity: 0, filter: 'blur(6px)' }}
+          initial={{ opacity: 0, filter: 'blur(4px)' }}
           animate={{ opacity: 1, filter: 'blur(0px)' }}
           transition={{
             duration: 0.22,
-            delay: Math.min(idx * 0.015, 0.4),
+            delay: Math.min(idx * 0.012, 0.35),
             ease: 'easeOut',
           }}
-          style={{ display: 'inline-block', whiteSpace: 'pre' }}
         >
-          {ch}
+          {ch === ' ' ? '\u00A0' : ch}
         </motion.span>
       ))}
     </span>
