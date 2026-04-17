@@ -127,7 +127,7 @@ export default function Home() {
       </section>
 
       {/* Your risk */}
-      <section className="max-w-3xl mx-auto px-6 pb-24 w-full">
+      <section className="max-w-3xl mx-auto px-6 py-24 w-full">
         <div className="mb-6">
           <Eyebrow>Your risk</Eyebrow>
         </div>
