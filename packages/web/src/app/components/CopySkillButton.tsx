@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const SKILL_URL = 'https://agents.moonwell.fi/skill.md';
 
@@ -24,20 +24,29 @@ function CheckIcon() {
 
 export default function CopySkillButton() {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(SKILL_URL);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setCopied(false), 2000);
   }
 
   return (
     <button
       onClick={handleCopy}
-      className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-accent text-white text-base font-semibold hover:bg-accent-hover transition-all cursor-pointer"
+      aria-label={copied ? 'Copied skill URL' : 'Copy skill URL'}
+      className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-accent text-white text-base font-semibold hover:bg-accent-hover transition-colors duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       Install skill
-      <span className="transition-all duration-150">
+      <span aria-hidden="true">
         {copied ? <CheckIcon /> : <CopyIcon />}
       </span>
     </button>

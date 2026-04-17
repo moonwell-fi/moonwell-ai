@@ -41,9 +41,9 @@ export default function Home() {
             <span className="font-mono text-base font-semibold"><span className="text-accent">agents</span>.moonwell.fi</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted">
-            <a href="#capabilities" className="hover:text-foreground transition-colors">Capabilities</a>
-            <a href="#install" className="hover:text-foreground transition-colors">Install</a>
-            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
+            <a href="#capabilities" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Capabilities</a>
+            <a href="#install" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Install</a>
+            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">GitHub</a>
           </div>
         </div>
       </nav>
@@ -110,7 +110,7 @@ export default function Home() {
           {EXAMPLE_PROMPTS.map((prompt) => (
             <div
               key={prompt}
-              className="border border-border rounded-lg px-4 py-3 font-mono text-sm hover:border-accent/40 transition-all cursor-default group"
+              className="border border-border rounded-lg px-4 py-3 font-mono text-sm hover:border-accent/40 transition-colors duration-150 cursor-default group"
             >
               <span className="text-accent">❯ </span>
               <span className="text-muted group-hover:text-foreground transition-colors">&ldquo;{prompt}&rdquo;</span>
@@ -208,9 +208,9 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
           <span className="font-mono">agents.moonwell.fi</span>
           <div className="flex gap-6">
-            <a href="https://moonwell.fi" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Moonwell</a>
-            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
-            <a href="/skill.md" className="hover:text-foreground transition-colors">Skill</a>
+            <a href="https://moonwell.fi" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Moonwell</a>
+            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">GitHub</a>
+            <a href="/skill.md" className="hover:text-foreground transition-colors duration-150 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent focus-visible:text-foreground">Skill</a>
           </div>
         </div>
       </footer>
