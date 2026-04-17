@@ -214,16 +214,14 @@ export default function Home() {
             <div className="pt-2 mt-2 border-t border-border/40">
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3 mt-4">
                 <span className="select-none" aria-hidden="true">↳ </span>
-                Then prepare &amp; submit in one pipe
+                Then preview a plan
               </h3>
               <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
                 <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
                   <span className="text-muted select-none" aria-hidden="true">$ </span>
-                  <span className="text-foreground">moonwell supply --asset USDC --amount-decimal 50 --json </span>
-                  <span className="text-muted">| </span>
-                  <span className="text-foreground">moonwell submit</span>
+                  <span className="text-foreground">moonwell supply --asset USDC --amount-decimal 50 --from 0x... --json</span>
                 </span>
-                <CopyButton text="moonwell supply --asset USDC --amount-decimal 50 --json | moonwell submit" />
+                <CopyButton text="moonwell supply --asset USDC --amount-decimal 50 --from 0x... --json" />
               </div>
             </div>
           </div>

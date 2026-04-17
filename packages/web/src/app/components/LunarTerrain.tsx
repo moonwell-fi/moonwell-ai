@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { useReducedMotion } from 'framer-motion';
 import * as THREE from 'three';
+
+type Vec2 = { x: number; y: number };
 
 /**
  * Lunar contour terrain — thin hairline topographic lines over a slowly
@@ -105,10 +107,9 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-function Terrain({ reduceMotion }: { reduceMotion: boolean }) {
+function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerRef: React.RefObject<Vec2> }) {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const mesh = useRef<THREE.Mesh>(null);
-  const { mouse } = useThree();
 
   const uniforms = useMemo(
     () => ({
@@ -125,9 +126,9 @@ function Terrain({ reduceMotion }: { reduceMotion: boolean }) {
     if (!mat.current || !mesh.current) return;
     if (!reduceMotion) {
       mat.current.uniforms.uTime.value += delta;
-      // subtle mouse parallax on the plane itself
-      const tx = mouse.x * 0.08;
-      const ty = mouse.y * 0.06;
+      const p = pointerRef.current;
+      const tx = p.x * 0.08;
+      const ty = p.y * 0.06;
       mesh.current.rotation.x = THREE.MathUtils.lerp(mesh.current.rotation.x, -0.9 + ty, 0.05);
       mesh.current.rotation.z = THREE.MathUtils.lerp(mesh.current.rotation.z, tx, 0.05);
     }
@@ -150,6 +151,20 @@ function Terrain({ reduceMotion }: { reduceMotion: boolean }) {
 
 export default function LunarTerrain() {
   const reduceMotion = useReducedMotion() ?? false;
+  // Track the cursor in a ref so no React render happens on mouse move.
+  // The Canvas is pointer-events-none, so r3f's built-in `mouse` never
+  // updates; listen on window instead.
+  const pointerRef = useRef<Vec2>({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const onMove = (e: PointerEvent) => {
+      pointerRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointerRef.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, [reduceMotion]);
 
   return (
     <div
@@ -168,7 +183,7 @@ export default function LunarTerrain() {
         gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
         frameloop={reduceMotion ? 'demand' : 'always'}
       >
-        <Terrain reduceMotion={reduceMotion} />
+        <Terrain reduceMotion={reduceMotion} pointerRef={pointerRef} />
       </Canvas>
     </div>
   );
