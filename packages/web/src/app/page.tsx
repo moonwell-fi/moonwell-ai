@@ -181,8 +181,9 @@ export default function Home() {
       </section>
 
       {/* Install */}
-      <section id="install" className="border-t border-border bg-card/30 py-24 scroll-mt-16">
-        <div className="max-w-xl mx-auto px-6">
+      <section id="install" className="relative border-t border-border bg-card/30 py-24 scroll-mt-16 overflow-hidden">
+        <LunarTerrain variant="footer" />
+        <div className="relative z-10 max-w-xl mx-auto px-6">
           <div className="mb-10">
             <Eyebrow>Install</Eyebrow>
           </div>

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useReducedMotion } from 'framer-motion';
 import * as THREE from 'three';
 
 type Vec2 = { x: number; y: number };
+type Variant = 'hero' | 'footer';
 
 /**
  * Lunar contour terrain — thin hairline topographic lines over a slowly
@@ -18,6 +19,7 @@ const vertexShader = /* glsl */ `
   varying vec2 vUv;
 
   uniform float uTime;
+  uniform float uScale;
 
   // 2D simplex noise — Ashima Arts / Stefan Gustavson
   vec3 mod289(vec3 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
@@ -58,7 +60,7 @@ const vertexShader = /* glsl */ `
 
   void main() {
     vUv = uv;
-    vec2 p = uv * 3.2;
+    vec2 p = uv * uScale;
     float t = uTime * 0.045;
     float e = fbm(p + vec2(t, -t * 0.6));
     // Crater-like bowls: sparse, deeper
@@ -80,25 +82,23 @@ const fragmentShader = /* glsl */ `
   uniform vec3 uContour;
   uniform vec3 uAccent;
   uniform float uDensity;
+  uniform float uFocusSpeed;
+  uniform float uFocusCenter;
   uniform vec2 uCursor;
 
   void main() {
-    // Contour bands from elevation
     float bands = vElevation * uDensity;
     float lineDist = abs(fract(bands) - 0.5) * 2.0;
     float thickness = 0.05 + 0.04 * fwidth(bands);
     float line = 1.0 - smoothstep(thickness, thickness + 0.03, lineDist);
 
-    // Focus band: one ridge migrates slowly across the elevation range
-    float focus = 0.22 + 0.25 * sin(uTime * 0.08);
+    float focus = uFocusCenter + 0.25 * sin(uTime * uFocusSpeed);
     float focusBand = 1.0 - smoothstep(0.0, 0.055, abs(vElevation - focus));
 
-    // Soft radial mask so the plane fades into the page background at edges
     vec2 centered = vUv - 0.5;
     float r = length(centered * vec2(1.3, 1.0));
     float edgeFade = smoothstep(0.58, 0.22, r);
 
-    // Cursor proximity — soft radial falloff in UV space
     float d = distance(vUv, uCursor);
     float hover = smoothstep(0.18, 0.0, d);
 
@@ -113,7 +113,28 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerRef: React.RefObject<Vec2> }) {
+type VariantConfig = {
+  rotationX: number;
+  scale: number;
+  density: number;
+  focusSpeed: number;
+  focusCenter: number;
+};
+
+const VARIANT_SHADER: Record<Variant, VariantConfig> = {
+  hero:   { rotationX: -0.9, scale: 3.2, density: 9.0,  focusSpeed: 0.08, focusCenter: 0.22 },
+  footer: { rotationX: -1.15, scale: 5.2, density: 13.0, focusSpeed: 0.04, focusCenter: -0.18 },
+};
+
+function Terrain({
+  reduceMotion,
+  pointerRef,
+  config,
+}: {
+  reduceMotion: boolean;
+  pointerRef: React.RefObject<Vec2>;
+  config: VariantConfig;
+}) {
   const mat = useRef<THREE.ShaderMaterial>(null);
   const mesh = useRef<THREE.Mesh>(null);
 
@@ -123,9 +144,15 @@ function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerR
       uBg: { value: new THREE.Color('#0f0d0e') },
       uContour: { value: new THREE.Color('#887982') },
       uAccent: { value: new THREE.Color('#2474da') },
-      uDensity: { value: 9.0 },
+      uDensity: { value: config.density },
+      uScale: { value: config.scale },
+      uFocusSpeed: { value: config.focusSpeed },
+      uFocusCenter: { value: config.focusCenter },
       uCursor: { value: new THREE.Vector2(-10, -10) },
     }),
+    // Uniforms are created once and mutated in place; variant config is
+    // expected to be stable for a given mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -134,14 +161,11 @@ function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerR
     if (!reduceMotion) {
       mat.current.uniforms.uTime.value += delta;
       const p = pointerRef.current;
-      // Sentinel (-10, -10) means no real pointer input yet — skip tilt + highlight.
       if (p.x > -5 && p.y > -5) {
         const tx = p.x * 0.08;
         const ty = p.y * 0.06;
-        mesh.current.rotation.x = THREE.MathUtils.lerp(mesh.current.rotation.x, -0.9 + ty, 0.05);
+        mesh.current.rotation.x = THREE.MathUtils.lerp(mesh.current.rotation.x, config.rotationX + ty, 0.05);
         mesh.current.rotation.z = THREE.MathUtils.lerp(mesh.current.rotation.z, tx, 0.05);
-        // NDC (-1..1) → screen UV (0..1). Y in pointerRef is already flipped
-        // so +1 = top of screen; UV has +1 = top, so no extra flip needed.
         const cursor = mat.current.uniforms.uCursor.value as THREE.Vector2;
         cursor.x = (p.x + 1) * 0.5;
         cursor.y = (p.y + 1) * 0.5;
@@ -150,7 +174,7 @@ function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerR
   });
 
   return (
-    <mesh ref={mesh} rotation={[-0.9, 0, 0]} position={[0, 0, 0]}>
+    <mesh ref={mesh} rotation={[config.rotationX, 0, 0]} position={[0, 0, 0]}>
       <planeGeometry args={[8, 5, 180, 120]} />
       <shaderMaterial
         ref={mat}
@@ -164,14 +188,13 @@ function Terrain({ reduceMotion, pointerRef }: { reduceMotion: boolean; pointerR
   );
 }
 
-export default function LunarTerrain() {
+export default function LunarTerrain({ variant = 'hero' }: { variant?: Variant }) {
   const reduceMotion = useReducedMotion() ?? false;
-  // Track the cursor in a ref so no React render happens on mouse move.
-  // The Canvas is pointer-events-none, so r3f's built-in `mouse` never
-  // updates; listen on window instead.
-  // Sentinel far off-screen so the cursor highlight stays dormant until a
-  // real pointermove event fires (avoids an always-on spot at page load).
   const pointerRef = useRef<Vec2>({ x: -10, y: -10 });
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  // Footer variant defers WebGL mount until it scrolls into view so we don't
+  // spin up a second Canvas on initial page load.
+  const [mounted, setMounted] = useState(variant === 'hero');
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -183,26 +206,64 @@ export default function LunarTerrain() {
     return () => window.removeEventListener('pointermove', onMove);
   }, [reduceMotion]);
 
+  useEffect(() => {
+    if (mounted) return;
+    const el = wrapperRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setMounted(true);
+            io.disconnect();
+            return;
+          }
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [mounted]);
+
+  const wrapperStyle =
+    variant === 'hero'
+      ? {
+          height: 'min(100dvh, 900px)',
+          maskImage: 'radial-gradient(ellipse at 50% 55%, black 35%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 55%, black 35%, transparent 80%)',
+        }
+      : {
+          maskImage: 'radial-gradient(ellipse at 50% 50%, black 30%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 30%, transparent 75%)',
+        };
+
+  const wrapperPosition =
+    variant === 'hero'
+      ? 'absolute top-0 left-0 right-0 z-0 overflow-hidden'
+      : 'absolute inset-0 z-0 overflow-hidden';
+
   return (
     <div
+      ref={wrapperRef}
       aria-hidden="true"
-      className="pointer-events-none absolute top-0 left-0 right-0 z-0 overflow-hidden"
-      style={{
-        height: 'min(100dvh, 900px)',
-        maskImage:
-          'radial-gradient(ellipse at 50% 55%, black 35%, transparent 80%)',
-        WebkitMaskImage:
-          'radial-gradient(ellipse at 50% 55%, black 35%, transparent 80%)',
-      }}
+      className={`pointer-events-none ${wrapperPosition}`}
+      style={wrapperStyle}
     >
-      <Canvas
-        dpr={[1, 1.6]}
-        camera={{ position: [0, 0, 3.2], fov: 42 }}
-        gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
-        frameloop={reduceMotion ? 'demand' : 'always'}
-      >
-        <Terrain reduceMotion={reduceMotion} pointerRef={pointerRef} />
-      </Canvas>
+      {mounted && (
+        <Canvas
+          dpr={[1, 1.6]}
+          camera={{ position: [0, 0, 3.2], fov: 42 }}
+          gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
+          frameloop={reduceMotion ? 'demand' : 'always'}
+        >
+          <Terrain
+            reduceMotion={reduceMotion}
+            pointerRef={pointerRef}
+            config={VARIANT_SHADER[variant]}
+          />
+        </Canvas>
+      )}
     </div>
   );
 }
