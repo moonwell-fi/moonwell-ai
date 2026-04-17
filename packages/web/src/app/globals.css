@@ -11,6 +11,7 @@
   --accent-hover: #225aab;
   --green: #42b34d;
   --orange: #fd6e31;
+  --red: #d72c2b;
   --purple: #ac10f4;
 }
 
@@ -25,6 +26,7 @@
   --color-accent-hover: var(--accent-hover);
   --color-green: var(--green);
   --color-orange: var(--orange);
+  --color-red: var(--red);
   --color-purple: var(--purple);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

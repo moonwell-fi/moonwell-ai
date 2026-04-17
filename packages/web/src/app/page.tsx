@@ -3,6 +3,8 @@ import CopyButton from './components/CopyButton';
 import TerminalDemo from './components/TerminalDemo';
 import LunarTerrain from './components/LunarTerrainMount';
 import PlanArtifact from './components/PlanArtifact';
+import HealthArtifact from './components/HealthArtifact';
+import ExamplePrompts from './components/ExamplePrompts';
 
 const CAPABILITIES = [
   { category: "Read", items: [
@@ -23,15 +25,6 @@ const CAPABILITIES = [
   { category: "Execute", items: [
     { name: "submit", desc: "Sign and broadcast prepared transactions on-chain" },
   ]},
-];
-
-const EXAMPLE_PROMPTS = [
-  "What are the best yield opportunities on Moonwell right now?",
-  "Supply 50 USDC to Moonwell on Base",
-  "Compare USDC supply rates on Base and Optimism",
-  "Check my health factor on Moonwell",
-  "Borrow 20 USDC against my collateral",
-  "Show my pending WELL rewards",
 ];
 
 const STEPS = [
@@ -109,30 +102,32 @@ export default function Home() {
       {/* Example prompts */}
       <section className="max-w-3xl mx-auto px-6 pb-24 w-full">
         <div className="mb-6">
-          <Eyebrow>Try asking</Eyebrow>
+          <Eyebrow>Try asking — click to run</Eyebrow>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {EXAMPLE_PROMPTS.map((prompt) => (
-            <div
-              key={prompt}
-              className="bg-card/50 rounded-lg px-4 py-4 font-mono text-sm hover:bg-card transition-colors duration-150 cursor-default group"
-            >
-              <span className="text-accent select-none" aria-hidden="true">❯ </span>
-              <span className="text-muted group-hover:text-foreground transition-colors duration-150">&ldquo;{prompt}&rdquo;</span>
-            </div>
-          ))}
-        </div>
+        <ExamplePrompts />
       </section>
 
-      {/* The plan artifact */}
-      <section className="max-w-3xl mx-auto px-6 pb-24 w-full">
-        <div className="mb-6">
-          <Eyebrow>The plan</Eyebrow>
+      {/* The plan + risk artifacts */}
+      <section className="max-w-3xl mx-auto px-6 pb-24 w-full space-y-12">
+        <div>
+          <div className="mb-6">
+            <Eyebrow>The plan</Eyebrow>
+          </div>
+          <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
+            Every write command returns a structured, unsigned plan — ordered transactions, preview, simulation, warnings — for the agent or you to inspect before signing.
+          </p>
+          <PlanArtifact />
         </div>
-        <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
-          Every write command returns a structured, unsigned plan — ordered transactions, preview, simulation, and warnings — for the agent or you to inspect before signing.
-        </p>
-        <PlanArtifact />
+
+        <div>
+          <div className="mb-6">
+            <Eyebrow>Your risk</Eyebrow>
+          </div>
+          <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
+            Check account health before any write. Tiered thresholds signal distance from liquidation.
+          </p>
+          <HealthArtifact />
+        </div>
       </section>
 
       {/* How it works */}

@@ -3,13 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 import { RotateCw } from 'lucide-react';
-
-const COMMAND = 'check my yield opportunities on moonwell';
-const RESULTS = [
-  { symbol: 'USDC', apy: '8.2% APY', tvl: '$42M TVL' },
-  { symbol: 'ETH', apy: '3.1% APY', tvl: '$18M TVL' },
-  { symbol: 'cbBTC', apy: '4.7% APY', tvl: '$9M TVL' },
-] as const;
+import { RUN_SCRIPT_EVENT, SCRIPTS, type Script } from '../lib/scripts';
 
 type Phase = 'idle' | 'typing' | 'scanning' | 'results' | 'complete';
 
@@ -37,18 +31,17 @@ export default function TerminalDemo() {
   const startedRef = useRef(false);
   const lastHRef = useRef(MIN_HEIGHT);
 
+  const [script, setScript] = useState<Script>(SCRIPTS.yield);
   const [phase, setPhase] = useState<Phase>('idle');
   const [typed, setTyped] = useState('');
   const [rowsShown, setRowsShown] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [runCount, setRunCount] = useState(0);
 
-  // Spring lives outside React so height interpolation never triggers a
-  // re-render and avoids framer's layout FLIP transform.
   const heightTarget = useMotionValue(MIN_HEIGHT);
   const height = useSpring(heightTarget, { stiffness: 200, damping: 28, mass: 0.9 });
 
-  const run = useCallback(() => {
+  const run = useCallback((next: Script) => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
     setTyped('');
@@ -56,8 +49,8 @@ export default function TerminalDemo() {
 
     if (reduceMotion) {
       setPhase('complete');
-      setTyped(COMMAND);
-      setRowsShown(RESULTS.length);
+      setTyped(next.command);
+      setRowsShown(next.rows.length);
       return;
     }
 
@@ -68,19 +61,19 @@ export default function TerminalDemo() {
     setPhase('typing');
     let i = 0;
     const typeNext = () => {
-      if (i >= COMMAND.length) {
+      if (i >= next.command.length) {
         schedule(() => setPhase('scanning'), 420);
         schedule(() => {
           setPhase('results');
-          RESULTS.forEach((_, idx) => {
+          next.rows.forEach((_, idx) => {
             schedule(() => setRowsShown(idx + 1), idx * 210);
           });
-          schedule(() => setPhase('complete'), RESULTS.length * 210 + 120);
-        }, 420 + 1000);
+          schedule(() => setPhase('complete'), next.rows.length * 210 + 120);
+        }, 420 + 900);
         return;
       }
-      const ch = COMMAND[i];
-      setTyped(COMMAND.slice(0, i + 1));
+      const ch = next.command[i];
+      setTyped(next.command.slice(0, i + 1));
       i += 1;
       schedule(typeNext, typingDelay(ch));
     };
@@ -96,7 +89,7 @@ export default function TerminalDemo() {
         for (const entry of entries) {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !startedRef.current) {
             startedRef.current = true;
-            run();
+            run(script);
             io.disconnect();
           }
         }
@@ -110,12 +103,27 @@ export default function TerminalDemo() {
       timersRef.current.forEach(clearTimeout);
       timersRef.current = [];
     };
-  }, [run]);
+  }, [run, script]);
 
   useEffect(() => {
     if (runCount === 0) return;
-    run();
-  }, [runCount, run]);
+    run(script);
+  }, [runCount, run, script]);
+
+  // Subscribe to external triggers from the prompt grid.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      const next = SCRIPTS[id];
+      if (!next) return;
+      startedRef.current = true;
+      setScript(next);
+      setRunCount((n) => n + 1);
+      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    window.addEventListener(RUN_SCRIPT_EVENT, handler);
+    return () => window.removeEventListener(RUN_SCRIPT_EVENT, handler);
+  }, []);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -146,9 +154,9 @@ export default function TerminalDemo() {
     >
       {phase === 'complete' && (
         <p className="sr-only" aria-live="polite">
-          {`Terminal: ${COMMAND}. Scanned Base markets. ${RESULTS.map(
-            (r) => `${r.symbol} ${r.apy}, ${r.tvl}`
-          ).join('. ')}.`}
+          {`Terminal: ${script.command}. ${script.scanLine}. ${script.rows
+            .map((r) => r.cells.filter(Boolean).join(' '))
+            .join('. ')}.`}
         </p>
       )}
 
@@ -174,7 +182,7 @@ export default function TerminalDemo() {
       </AnimatePresence>
 
       <div ref={contentRef} className="relative px-5 py-4 space-y-2" aria-hidden="true">
-        <div>
+        <div className="leading-6 pl-[2ch] -indent-[2ch]">
           <span className="text-accent select-none">❯ </span>
           <span className="text-foreground">{typed}</span>
           {showTypingCaret && <span className={CARET_CLASS} />}
@@ -183,13 +191,13 @@ export default function TerminalDemo() {
         <AnimatePresence>
           {(phase === 'scanning' || phase === 'results' || phase === 'complete') && (
             <motion.div
-              key="scan"
+              key={`scan-${script.id}-${runCount}`}
               className="text-muted ml-4"
               {...rowEnter}
               transition={reduceMotion ? { duration: 0 } : rowSpring}
             >
               <span className="select-none">↳ </span>
-              scanning Base markets
+              {script.scanLine}
               {phase === 'scanning' ? <ScanDots /> : <span className="select-none">&hellip;</span>}
             </motion.div>
           )}
@@ -197,17 +205,17 @@ export default function TerminalDemo() {
 
         <div className="space-y-1.5 ml-4 pt-1">
           <AnimatePresence>
-            {RESULTS.slice(0, rowsShown).map((r) => (
+            {script.rows.slice(0, rowsShown).map((r, idx) => (
               <motion.div
-                key={`${r.symbol}-${runCount}`}
-                className="flex gap-2"
+                key={`${script.id}-${idx}-${runCount}`}
+                className="flex gap-2 items-baseline"
                 {...rowEnter}
                 transition={reduceMotion ? { duration: 0 } : rowSpring}
               >
                 <ResultCheck />
-                <span className="text-foreground w-14">{r.symbol}</span>
-                <span className="text-accent w-20">{r.apy}</span>
-                <span className="text-muted">{r.tvl}</span>
+                <span className="text-foreground w-32 shrink-0 truncate">{r.cells[0]}</span>
+                <span className="text-accent shrink-0">{r.cells[1]}</span>
+                <span className="text-muted truncate">{r.cells[2]}</span>
               </motion.div>
             ))}
           </AnimatePresence>
