@@ -194,10 +194,6 @@ export default function Home() {
                   <span className="text-accent select-none" aria-hidden="true">❯ </span>
                   <span className="text-foreground">curl</span>
                   <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
-                  <span
-                    className="inline-block w-[0.5em] h-[1em] -mb-[0.15em] ml-[1px] bg-accent align-baseline cursor-blink"
-                    aria-hidden="true"
-                  />
                 </span>
                 <CopyButton text="curl https://agents.moonwell.fi/skill.md" />
               </div>
