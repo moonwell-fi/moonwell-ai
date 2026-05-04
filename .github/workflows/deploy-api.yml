@@ -1,0 +1,42 @@
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/api/**"
+      - ".github/workflows/deploy-api.yml"
+      - ".github/actions/install-dependencies/**"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify
+    uses: ./.github/workflows/verify.yml
+    secrets: inherit
+
+  deploy:
+    name: Deploy to Cloudflare Workers
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: packages/api
+          command: deploy

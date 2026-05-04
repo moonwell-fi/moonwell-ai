@@ -9,32 +9,117 @@ description: >-
   lending, borrowing, supplying, or yield opportunities.
 ---
 
-# Moonwell CLI
+# Moonwell
 
-Agent-first CLI for the Moonwell lending protocol. Queries live on-chain data via the Moonwell SDK and prepares unsigned transactions for lending operations.
+Two ways to use this skill — both speak the same JSON envelope `{ success, data, meta, error? }` and the same `PrepareResult` shape, so prompts can switch modes without rewrites.
 
-**Supported chains:** Base (8453), Optimism (10)
-**No API keys required** — all data is fetched via public RPC.
+| Mode | Best for | Install |
+|---|---|---|
+| **A — HTTP API** at `https://api.moonwell.fi/v1/` | Agent harnesses that can't install npm packages | None — just `curl`/`fetch` |
+| **B — CLI** (`@moonwell-fi/cli`) | Full control, multi-step orchestration, local signing | `npm install -g @moonwell-fi/cli` |
 
-## Quick Reference
+**Supported chains:** Base (8453), Optimism (10).
+
+**Chain parameter:** `base` (default) | `optimism` | `8453` | `10` | `op`.
+
+---
+
+## Mode A — HTTP API
+
+Stateless. GET for reads, POST for unsigned calldata. You sign and broadcast yourself.
+
+### Reads
+
+```bash
+# All markets
+curl 'https://api.moonwell.fi/v1/markets?chain=base'
+
+# One market (symbol or address)
+curl 'https://api.moonwell.fi/v1/markets/USDC?chain=base'
+
+# Rates only
+curl 'https://api.moonwell.fi/v1/rates?chain=base&asset=USDC'
+
+# Yield opportunities
+curl 'https://api.moonwell.fi/v1/yield?chain=base&sort=apy&min-tvl=1000000&limit=5'
+
+# User-scoped (per-address, never cached)
+curl 'https://api.moonwell.fi/v1/positions/0xYourAddr?chain=base'
+curl 'https://api.moonwell.fi/v1/health/0xYourAddr?chain=base'
+curl 'https://api.moonwell.fi/v1/rewards/0xYourAddr?chain=base'
+curl 'https://api.moonwell.fi/v1/token-balance/0xYourAddr?chain=base&asset=USDC'
+```
+
+### Prepare unsigned calldata
+
+```bash
+curl -X POST 'https://api.moonwell.fi/v1/prepare/supply' \
+  -H 'content-type: application/json' \
+  -d '{"chain":"base","asset":"USDC","amountDecimal":"100","from":"0xYourAddr"}'
+```
+
+Verbs: `supply`, `withdraw`, `borrow`, `repay`. Body fields:
+
+| Field | Type | Notes |
+|---|---|---|
+| `chain` | string | `base` / `optimism` / chain ID |
+| `asset` | string | Underlying symbol, e.g. `USDC`, `WETH` |
+| `amount` | string | Base units (e.g. `"1000000"` for 1 USDC). Use this **or** `amountDecimal`. |
+| `amountDecimal` | string | Human-readable decimal (e.g. `"1.0"`). Use this **or** `amount`. |
+| `from` | string | 0x-prefixed sender address |
+| `poolAddress` | string? | Override mToken (auto-resolved when omitted) |
+| `simulate` | boolean? | Defaults `true`; first-step gas estimate via `eth_estimateGas` |
+
+The response's `data.transactions[]` is an ordered array of unsigned txs:
+
+```json
+{
+  "step": "approve",
+  "description": "Approve token for Moonwell supply",
+  "to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "data": "0x095ea7b3...",
+  "value": "0",
+  "chainId": 8453
+}
+```
+
+Sign and broadcast each in order. After step 1 confirms, the next step's gas may need a manual cap (public RPCs can serve stale state — this is documented in `simulation.skippedSteps`).
+
+### Caching
+
+Market reads (`/markets`, `/rates`, `/yield`) are edge-cached for 30s. User-scoped reads (`/positions`, `/health`, `/rewards`, `/token-balance`) are never cached. POST `/prepare/*` never caches.
+
+---
+
+## Mode B — CLI
+
+Install:
+
+```bash
+npm install -g @moonwell-fi/cli
+# or one-shot:
+npx @moonwell-fi/cli markets --chain base
+```
+
+### Quick reference
 
 | Intent | Command |
 |---|---|
-| List all markets | `moonwell markets --chain base` |
-| Check rates for USDC | `moonwell rates --asset USDC` |
-| View account positions | `moonwell positions --address 0x...` |
-| Find best yield | `moonwell yield --sort apy --limit 5` |
-| Check account health | `moonwell health --address 0x...` |
-| View pending rewards | `moonwell rewards --address 0x...` |
-| Check token balance | `moonwell token-balance --address 0x... --asset USDC` |
-| Prepare a supply tx | `moonwell supply --asset USDC --amount-decimal 100 --from 0x...` |
-| Prepare a withdraw tx | `moonwell withdraw --asset USDC --amount-decimal 50 --from 0x...` |
-| Prepare a borrow tx | `moonwell borrow --asset USDC --amount-decimal 25 --from 0x...` |
-| Prepare a repay tx | `moonwell repay --asset USDC --amount-decimal 25 --from 0x...` |
-| Submit prepared tx | `moonwell submit --action-file /tmp/supply.json` |
-| Full supply pipeline | `moonwell supply ... --json \| moonwell submit --action-file -` |
+| List markets | `moonwell markets --chain base` |
+| Rates for USDC | `moonwell rates --asset USDC` |
+| Account positions | `moonwell positions --address 0x...` |
+| Best yield | `moonwell yield --sort apy --limit 5` |
+| Health factor | `moonwell health --address 0x...` |
+| Pending rewards | `moonwell rewards --address 0x...` |
+| Token balance | `moonwell token-balance --address 0x... --asset USDC` |
+| Prepare supply | `moonwell supply --asset USDC --amount-decimal 100 --from 0x... --json` |
+| Prepare withdraw | `moonwell withdraw --asset USDC --amount-decimal 50 --from 0x... --json` |
+| Prepare borrow | `moonwell borrow --asset USDC --amount-decimal 25 --from 0x... --json` |
+| Prepare repay | `moonwell repay --asset USDC --amount-decimal 25 --from 0x... --json` |
+| Sign + broadcast | `moonwell submit --action-file /tmp/supply.json` |
+| Pipe pipeline | `moonwell supply ... --json \| moonwell submit --action-file -` |
 
-## Global Options
+### Global options
 
 ```
 --chain <chain>    base (default) | optimism | 8453 | 10
@@ -42,253 +127,102 @@ Agent-first CLI for the Moonwell lending protocol. Queries live on-chain data vi
 --json             Force JSON output (auto-detected for piped output)
 ```
 
-## Running the CLI
+### Submit (sign + broadcast)
 
-```bash
-cd moonwell-cli && npx tsx src/index.ts <command> [options]
-```
+The `submit` command resolves keys in this order:
 
-## Read Commands
-
-### markets
-
-List all lending markets with supply/borrow APY, TVL, and utilization.
-
-```bash
-moonwell markets --chain base --sort tvl --limit 10
-moonwell markets --asset USDC --json
-```
-
-Returns per market: `asset`, `mToken`, `baseSupplyApy`, `baseBorrowApy`, `totalSupplyUsd`, `totalBorrowsUsd`, `utilization`, `collateralFactor`.
-
-### rates
-
-Current supply and borrow rates with utilization.
-
-```bash
-moonwell rates --chain base --asset WETH
-```
-
-### positions
-
-View account supply, borrow, and collateral positions.
-
-```bash
-moonwell positions --address 0xYourAddress --chain base
-moonwell positions --address 0xYourAddress --asset USDC --json
-```
-
-Returns per position: `market`, `suppliedUsd`, `borrowedUsd`, `collateralUsd`, `collateralEnabled`.
-
-### yield
-
-Yield opportunities sorted by supply APY.
-
-```bash
-moonwell yield --sort apy --min-tvl 1000000 --limit 5
-```
-
-### health
-
-Account health factor and liquidity overview.
-
-```bash
-moonwell health --address 0xYourAddress --chain base
-```
-
-Returns: `totalSupplyUsd`, `totalBorrowUsd`, `totalCollateralUsd`, `healthFactor`.
-
-Health factor interpretation:
-- `> 1.5` — healthy
-- `1.1 - 1.5` — caution
-- `< 1.1` — liquidation risk
-
-### rewards
-
-Pending WELL token rewards across markets.
-
-```bash
-moonwell rewards --address 0xYourAddress --chain base
-```
-
-### token-balance
-
-Check ERC-20 token balances for Moonwell-related tokens.
-
-```bash
-moonwell token-balance --address 0xYourAddress --asset USDC
-```
-
-## Write Commands
-
-Write commands **prepare unsigned transactions only**. They never sign or broadcast. Simulation runs by default (skip with `--no-simulate`).
-
-### supply
-
-Prepare a supply (deposit) transaction. Automatically handles:
-1. ERC-20 approval (if current allowance < amount)
-2. Market entry via `Comptroller.enterMarkets()` (if not already entered)
-3. `mToken.mint(amount)` call
-
-```bash
-moonwell supply --asset USDC --amount-decimal 100 --from 0xYourAddress --chain base --json
-```
-
-### withdraw
-
-Prepare a withdrawal via `mToken.redeemUnderlying(amount)`.
-
-```bash
-moonwell withdraw --asset USDC --amount-decimal 50 --from 0xYourAddress
-```
-
-### borrow
-
-Prepare a borrow transaction. Requires existing collateral and market entry.
-
-```bash
-moonwell borrow --asset USDC --amount-decimal 25 --from 0xYourAddress
-```
-
-### repay
-
-Prepare a repayment via approval + `mToken.repayBorrow(amount)`.
-
-```bash
-moonwell repay --asset USDC --amount-decimal 25 --from 0xYourAddress
-```
-
-### Common write options
-
-```
---asset <symbol>         Underlying asset (required)
---amount <units>         Amount in base units (e.g., 1000000 for 1 USDC)
---amount-decimal <n>     Amount in human-readable form (e.g., 1.0)
---from <addr>            Sender address (required)
---pool-address <addr>    Override mToken address (auto-resolved if omitted)
---no-simulate            Skip eth_estimateGas simulation
-```
-
-### PrepareResult envelope
-
-Write commands return a `PrepareResult` JSON object:
-
-```json
-{
-  "operation": "supply",
-  "chain": "eip155:8453",
-  "transactions": [
-    {
-      "step": "approve",
-      "description": "Approve token for Moonwell supply",
-      "to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-      "data": "0x095ea7b3...",
-      "value": "0",
-      "chainId": 8453
-    },
-    {
-      "step": "moonwell-supply",
-      "description": "Supply asset to Moonwell",
-      "to": "0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22",
-      "data": "0xa0712d68...",
-      "value": "0",
-      "chainId": 8453
-    }
-  ],
-  "requirements": ["Sufficient USDC balance", "Gas for 2 transaction(s)"],
-  "preview": {
-    "asset": "USDC",
-    "amount": "100000000",
-    "amountDecimal": "100",
-    "mToken": "0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22",
-    "estimatedAPY": 2.92
-  },
-  "warnings": [],
-  "simulation": {
-    "success": true,
-    "gasEstimate": "185000"
-  }
-}
-```
-
-## Submit Command
-
-The `submit` command signs and broadcasts prepared transactions on-chain. It reads a PrepareResult (from a write command) and sequentially signs, broadcasts, and confirms each transaction.
-
-### Key detection (in order of precedence)
-
-1. `--private-key <hex>` flag
+1. `--private-key <hex>` flag — **scripted use only**
 2. `MOONWELL_PRIVATE_KEY` env var
-3. `MOONWELL_PRIVATE_KEY_FILE` env var (path to file)
-4. `~/.moonwell-cli/key.hex` file
-
-### Usage
+3. `MOONWELL_PRIVATE_KEY_FILE` env var (path)
+4. `~/.moonwell-cli/key.hex` (must be `chmod 600`)
 
 ```bash
 # From file
 moonwell supply --asset USDC --amount-decimal 10 --from 0x... --json > /tmp/supply.json
 moonwell submit --action-file /tmp/supply.json
 
-# Piped (stdin)
+# Piped
 moonwell supply --asset USDC --amount-decimal 10 --from 0x... --json | moonwell submit --action-file -
-
-# With explicit key
-moonwell submit --action-file /tmp/supply.json --private-key 0xabcd...
 ```
 
-### Full E2E workflow
+Submit refuses to sign if the resolved signer ≠ `from` used during prepare, or if `--chain` differs from the prepared chain. Tx targets are whitelisted to Comptroller, listed mTokens, and mToken underlyings.
+
+### Full CLI workflow
 
 ```bash
-# 1. Check market rates
 moonwell rates --asset USDC --chain base
-
-# 2. Check your balance
-moonwell token-balance --address 0xYourAddr --asset USDC
-
-# 3. Prepare the supply
-moonwell supply --asset USDC --amount-decimal 50 --from 0xYourAddr --json > /tmp/supply.json
-
-# 4. Review the plan (optional)
+moonwell token-balance --address 0xYour --asset USDC
+moonwell supply --asset USDC --amount-decimal 50 --from 0xYour --json > /tmp/supply.json
 cat /tmp/supply.json | jq '.data.transactions[].step'
-
-# 5. Submit
 moonwell submit --action-file /tmp/supply.json
-
-# 6. Verify
-moonwell positions --address 0xYourAddr
-moonwell health --address 0xYourAddr
+moonwell positions --address 0xYour
+moonwell health --address 0xYour
 ```
 
-## Protocol Guide (Builder Reference)
+---
+
+## Mode comparison
+
+| Capability | API | CLI |
+|---|---|---|
+| Read markets / positions / health / rewards | ✓ | ✓ |
+| Generate calldata (`supply`/`withdraw`/`borrow`/`repay`) | ✓ | ✓ |
+| Sign + broadcast | ✗ (you sign) | ✓ (`moonwell submit`) |
+| Custom RPC | ✗ | ✓ (`--rpc-url`) |
+| Multi-step nonce orchestration | ✗ (you orchestrate) | ✓ (`submit` handles nonces + gas fallbacks) |
+| Same JSON envelope | ✓ | ✓ (`--json`) |
+
+---
+
+## Protocol guide (builder reference)
 
 Moonwell is a **Compound v2 fork**. Key concepts:
 
-- **mTokens**: ERC-20 receipt tokens representing deposited assets (e.g., mUSDC, mWETH)
-- **Comptroller**: Governance contract managing collateral factors, market listing, and liquidation
-- **Exchange Rate**: mToken ↔ underlying conversion rate, accrues over time
-- **Collateral Factor**: max borrow power per supplied dollar (e.g., 0.88 = 88% LTV)
+- **mTokens**: ERC-20 receipt tokens representing deposited assets (mUSDC, mWETH, …)
+- **Comptroller**: governance contract managing collateral factors, market listing, liquidation
+- **Exchange Rate**: mToken ↔ underlying conversion, accrues over time
+- **Collateral Factor**: max borrow power per supplied dollar (0.88 = 88% LTV)
 
 ### Supply flow
+
 1. Approve underlying token to mToken contract
-2. Call `Comptroller.enterMarkets([mToken])` to enable as collateral
-3. Call `mToken.mint(amount)` — receive mTokens representing your deposit
+2. `Comptroller.enterMarkets([mToken])` to enable as collateral
+3. `mToken.mint(amount)` — receive mTokens
+
+The API/CLI auto-includes steps 1 and 2 only when needed (allowance < amount, not yet entered). Idempotent.
 
 ### Borrow flow
+
 1. Must have supplied collateral and entered the market
-2. Call `mToken.borrow(amount)` — receive underlying tokens
+2. `mToken.borrow(amount)` — receive underlying tokens
 3. Account liquidity must remain positive after borrow
 
-### Key safety considerations
-See [references/safety-patterns.md](references/safety-patterns.md) for details on:
-- WETH wrapping edge cases
-- Collateral factor and liquidation thresholds
-- enterMarkets requirement
-- Compound v2 error codes vs reverts
+### WETH special-case
 
-### Contract addresses
-See [references/contract-reference.md](references/contract-reference.md) for all deployed addresses.
+Moonwell mWETH **auto-unwraps to native ETH on borrow/withdraw** (you receive ETH). Supply/repay still requires the **ERC-20 WETH path** — wrap ETH→WETH first if needed. Both modes emit a warning for WETH operations.
 
-### SDK integration
-For building custom integrations, use `@moonwell-fi/moonwell-sdk`:
-- Full docs: https://sdk.moonwell.fi/docs/getting-started
-- LLM reference: https://sdk.moonwell.fi/llms-full.txt
+### Compound v2 error codes
+
+`mint`, `borrow`, `redeemUnderlying`, `repayBorrow`, `enterMarkets` return `0` for success and a non-zero code for business-logic failures **without reverting**. After broadcasting, check the return code (or watch logs for `Failure(error, info, detail)`).
+
+### Health factor interpretation
+
+- `> 1.5` — healthy
+- `1.1 – 1.5` — caution
+- `< 1.1` — liquidation risk
+- `null` — no borrows
+
+### Public RPC limitations
+
+Public RPCs serve stale state. Multi-step prepares simulate only step 1 (later steps depend on prior on-chain state). The API uses paid RPCs server-side; the CLI defaults to public unless `--rpc-url` is set.
+
+---
+
+## References
+
+- API source / Workers code: <https://github.com/moonwell-fi/moonwell-ai/tree/main/packages/api>
+- CLI source: <https://github.com/moonwell-fi/moonwell-ai/tree/main/packages/cli>
+- Moonwell SDK: <https://sdk.moonwell.fi> (TypeScript SDK underneath both modes)
+- SDK LLM reference: <https://sdk.moonwell.fi/llms-full.txt>
+- Safety patterns: [references/safety-patterns.md](references/safety-patterns.md)
+- Contract addresses: [references/contract-reference.md](references/contract-reference.md)

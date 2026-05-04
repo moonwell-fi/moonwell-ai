@@ -1,0 +1,88 @@
+# Agent guide — @moonwell-ai/api
+
+Cloudflare Workers HTTP API at `api.moonwell.fi`. Wraps the same Moonwell SDK and viem calldata generation that the CLI uses, behind REST so agent harnesses that can't `npm install` can still call into Moonwell.
+
+## First 5 minutes
+
+```bash
+pnpm dev                                  # http://localhost:8787 (wrangler dev)
+curl http://localhost:8787/v1/_health
+curl 'http://localhost:8787/v1/markets?chain=base&limit=3'
+pnpm test
+pnpm typecheck
+pnpm build                                # wrangler deploy --dry-run smoke
+```
+
+Production deploy is automated via `.github/workflows/deploy-api.yml` — push to `main` with changes under `packages/api/**` triggers it.
+
+## Folder structure
+
+```
+src/
+  index.ts                # Hono app: route mounting, CORS, error envelope
+  env.ts                  # typed Env (BASE_RPC_URL, OPTIMISM_RPC_URL)
+  routes/
+    markets.ts            # GET /v1/markets, GET /v1/markets/:id
+    positions.ts          # GET /v1/positions/:address
+    health.ts             # GET /v1/health/:address
+    rewards.ts            # GET /v1/rewards/:address
+    yield.ts              # GET /v1/yield
+    token-balance.ts      # GET /v1/token-balance/:address
+    prepare.ts            # POST /v1/prepare/{supply,withdraw,borrow,repay}
+  lib/                    # DUPLICATED domain logic — see policy below
+    prepare.ts            # calldata builder
+    abis.ts               # mToken / Comptroller / ERC20
+    contracts.ts          # comptroller + reward-distributor addresses
+    chains.ts             # chain config + aliases
+    amount.ts             # base-unit ↔ decimal
+    moonwell.ts           # SDK client factory (worker variant — RPCs from env)
+    mtoken-resolver.ts
+    types.ts              # PrepareResult, UnsignedTx, etc.
+    errors.ts             # MoonwellError, exit codes
+    client.ts             # viem PublicClient factory (worker variant — RPC required)
+    output.ts             # JSON envelope helpers (no console / chalk)
+test/
+  prepare.test.ts
+  amount.test.ts
+  chains.test.ts
+```
+
+## Duplication policy (important)
+
+`src/lib/` is **duplicated from `packages/cli/src/lib/`**. The CLI is canonical — bug fixes flow CLI → API.
+
+Workflow when you change a CLI lib file:
+
+```bash
+# from repo root
+pnpm sync-shared
+git diff packages/api/src/lib/   # review what changed
+```
+
+`pnpm sync-shared` (root) runs `scripts/sync-shared-libs.mjs`. It copies the agreed-upon files; **`client.ts`, `moonwell.ts`, and `output.ts` are intentionally divergent and excluded from the sync** — the worker variants take RPC URLs from env bindings (`c.env.BASE_RPC_URL`) and produce JSON only (no chalk/console).
+
+## Non-obvious
+
+- `nodejs_compat` flag is set in `wrangler.toml` because `viem` and `@moonwell-fi/moonwell-sdk` use a few Node primitives (`Buffer`, `crypto`).
+- Workers re-use the V8 isolate across requests. Don't put per-user state in module scope. Each request creates a fresh SDK + viem client.
+- Read endpoints (`/v1/markets`, `/v1/yield`, `/v1/markets/:id`) are cacheable: 30s `Cache-Control` plus Workers `caches.default`. User-scoped reads (`/v1/positions/:address`, `/v1/health/:address`, `/v1/rewards/:address`, `/v1/token-balance/:address`) use `Cache-Control: private, no-store`.
+- All responses use the envelope `{ success, data, meta, error? }` matching the CLI's JSON output (see `src/lib/output.ts` and the CLI's same file).
+- RPC URLs are required secrets. `wrangler dev` reads them from `.dev.vars` if present; production uses `wrangler secret put`.
+
+## Local secrets
+
+Create `packages/api/.dev.vars` (gitignored — never committed):
+
+```
+BASE_RPC_URL=https://base-mainnet.g.alchemy.com/v2/YOUR_KEY
+OPTIMISM_RPC_URL=https://opt-mainnet.g.alchemy.com/v2/YOUR_KEY
+```
+
+Then `pnpm dev` will pick them up automatically.
+
+## Quality bar
+
+- `pnpm typecheck` passes
+- `pnpm test` passes
+- `pnpm build` (wrangler dry-run) passes
+- Smoke at least one read + one prepare endpoint via `wrangler dev` before committing
