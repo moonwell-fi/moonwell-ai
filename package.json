@@ -2,10 +2,29 @@
   "name": "moonwell-ai",
   "private": true,
   "description": "Moonwell AI — CLI, skill, and landing page",
+  "packageManager": "pnpm@9.1.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "pnpm -r build",
     "dev:web": "pnpm --filter @moonwell-ai/web dev",
-    "typecheck": "pnpm --filter @moonwell-fi/cli typecheck",
-    "test": "pnpm --filter @moonwell-fi/cli test"
+    "dev:api": "pnpm --filter @moonwell-ai/api dev",
+    "deploy:web": "pnpm --filter @moonwell-ai/web deploy",
+    "deploy:api": "pnpm --filter @moonwell-ai/api deploy",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm --filter @moonwell-ai/web lint",
+    "clean": "pnpm -r exec rm -rf dist .next out node_modules/.cache",
+    "changeset": "changeset",
+    "changeset:version": "changeset version && pnpm install --lockfile-only",
+    "changeset:prepublish": "pnpm --filter @moonwell-fi/cli build",
+    "changeset:publish": "pnpm changeset:prepublish && changeset publish",
+    "sync-shared": "node scripts/sync-shared-libs.mjs"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.10",
+    "wrangler": "^3.90.0"
   }
 }

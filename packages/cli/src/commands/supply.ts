@@ -88,12 +88,18 @@ export async function executeLendCommand(
       amountDecimal = opts.amountDecimal!;
     }
 
-    // Resolve mToken
+    // Resolve mToken — pass the SDK markets list as hints so we skip the
+    // Comptroller.getAllMarkets() + multicall round-trip on the happy path.
+    const marketHints = markets.map((m) => ({
+      mTokenAddress: getAddress(m.marketToken.address) as Address,
+      underlyingAddress: getAddress(m.underlyingToken.address) as Address,
+    }));
     const mToken = await resolveMToken(
       viemClient,
       chain.chainId,
       assetAddress,
       opts.poolAddress,
+      marketHints,
     );
 
     if (spinner) spinner.text = `Building ${verb} transaction...`;

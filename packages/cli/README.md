@@ -2,6 +2,8 @@
 
 Agent-first CLI for the [Moonwell](https://moonwell.fi) lending protocol on Base and Optimism.
 
+> Building an agent that can't `npm install`? There's also a hosted HTTP API at `https://api.moonwell.fi/v1/` that returns the same JSON envelopes. Skill manual: <https://agents.moonwell.fi/skill.md>.
+
 ## Features
 
 - **Read**: Markets, rates, positions, yield opportunities, health, rewards, balances
