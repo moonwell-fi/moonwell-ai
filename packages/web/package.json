@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "pnpm run build && wrangler deploy --config wrangler.jsonc"
   },
   "dependencies": {
     "@react-three/fiber": "^9.6.0",

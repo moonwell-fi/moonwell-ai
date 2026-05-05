@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "moonwell-web",
-  "compatibility_date": "2025-04-01",
+  "name": "moonwell-ai",
+  "compatibility_date": "2026-05-05",
 
   // Pin to the Moonwell account — the auth user has multiple accounts and
   // wrangler errors with "more than one account available" without this.
