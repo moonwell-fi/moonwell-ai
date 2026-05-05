@@ -14,7 +14,7 @@
   // Workers Static Assets — serves the static export from packages/web/out
   // produced by `next build` (next.config.ts has `output: "export"`).
   "assets": {
-    "directory": "./packages/web/out",
+    "directory": "out",
     // next.config.ts has `trailingSlash: true`, so /foo → /foo/
     "html_handling": "force-trailing-slash",
     // Next emits out/404.html for the not-found route
