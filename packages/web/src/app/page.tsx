@@ -1,5 +1,11 @@
 import CopySkillButton from './components/CopySkillButton';
 import CopyButton from './components/CopyButton';
+import TerminalDemo from './components/TerminalDemo';
+import TerminalCard from './components/TerminalCard';
+import LunarTerrain from './components/LunarTerrainMount';
+import HealthArtifact from './components/HealthArtifact';
+import ExamplePrompts from './components/ExamplePrompts';
+import PromptCarousel from './components/PromptCarousel';
 
 const CAPABILITIES = [
   { category: "Read", items: [
@@ -22,146 +28,143 @@ const CAPABILITIES = [
   ]},
 ];
 
-const EXAMPLE_PROMPTS = [
-  "What are the best yield opportunities on Moonwell right now?",
-  "Supply 50 USDC to Moonwell on Base",
-  "Check my health factor on Moonwell",
-  "Borrow 20 USDC against my collateral",
+const STEPS = [
+  { step: "01", title: "Install the skill", desc: "Point your agent (Claude Code, Cursor, Hermes) at the skill file." },
+  { step: "02", title: "Prompt naturally", desc: "Ask about rates, supply tokens, manage positions in plain language." },
+  { step: "03", title: "Review & sign", desc: "Write commands return an unsigned plan with simulation and preview. Pipe to submit, or sign when ready." },
 ];
+
+function Eyebrow({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p className={`font-mono text-[11px] uppercase tracking-[0.2em] text-muted ${className}`}>
+      {children}
+    </p>
+  );
+}
+
+function InstallSnippet({
+  prefix,
+  prefixColor,
+  copyText,
+  children,
+}: {
+  prefix: '❯' | '$';
+  prefixColor: 'accent' | 'muted';
+  copyText: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-card border border-border/60 rounded-lg px-4 py-3.5 text-sm font-mono flex items-start gap-3">
+      <span className="flex-1 leading-6 pl-[2ch] -indent-[2ch]">
+        <span className={`${prefixColor === 'accent' ? 'text-accent' : 'text-muted'} select-none`} aria-hidden="true">{prefix} </span>
+        {children}
+      </span>
+      <CopyButton text={copyText} />
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div id="top" className="flex flex-col min-h-screen">
 
       {/* Nav */}
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* <span className="font-mono text-sm text-muted">~/</span> */}
-            <span className="font-mono text-base font-semibold"><span className="text-accent">agents</span>.moonwell.fi</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-muted">
-            <a href="#capabilities" className="hover:text-foreground transition-colors">Capabilities</a>
-            <a href="#install" className="hover:text-foreground transition-colors">Install</a>
-            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
+      <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <a
+            href="#top"
+            aria-label="Moonwell agents — back to top"
+            className="font-mono text-sm font-medium hover:text-foreground transition-colors duration-150 focus-ring-link"
+          >
+            <span className="text-accent">agents</span>.moonwell.fi
+          </a>
+          <div className="flex items-center gap-4 sm:gap-6 text-sm text-muted">
+            <a href="#capabilities" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Capabilities</a>
+            <a href="#install" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Install</a>
+            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 focus-ring-link">GitHub</a>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-6 pt-20 pb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-center max-w-3xl leading-[1.15]">
-          Give your agent DeFi<br />
-          superpowers with{" "}<span className="text-accent">Moonwell</span>
-        </h1>
-        <div className="mt-8 flex items-center space-x-4">
-          <CopySkillButton />
-          <a
-            href="#capabilities"
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors"
-          >
-            See capabilities <span aria-hidden="true">→</span>
-          </a>
-        </div>
+      <section className="relative px-6 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
+        <LunarTerrain />
+        <div className="relative z-10 flex flex-col items-center">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.04em] text-center max-w-4xl leading-[1.02]">
+            Give your agent DeFi superpowers with{" "}
+            <span className="text-accent">Moonwell</span>.
+          </h1>
+          <p className="mt-8 max-w-xl text-center text-lg leading-relaxed text-muted">
+            A CLI and skill that lets any AI agent read Moonwell markets and prepare unsigned transactions. Simulated. Previewed. You sign.
+          </p>
+          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.2em] text-muted/70">
+            Base · Optimism · no keys required
+          </p>
 
-        {/* Agent session terminal card */}
-        <div className="w-full max-w-2xl mt-10">
-          <div className="border border-border rounded-xl bg-card overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-background">
-              <div className="w-2.5 h-2.5 rounded-full bg-border" />
-              <div className="w-2.5 h-2.5 rounded-full bg-border" />
-              <div className="w-2.5 h-2.5 rounded-full bg-border" />
-              <span className="ml-2 font-mono text-xs text-muted/60">moonwell-agent</span>
-            </div>
-            <div className="px-5 py-4 font-mono text-sm space-y-2">
-              <div>
-                <span className="text-accent">❯</span>
-                <span className="text-foreground ml-2">check my yield opportunities on moonwell</span>
-              </div>
-              <div className="text-muted ml-4">↳ scanning Base markets...</div>
-              <div className="space-y-1.5 ml-4 pt-1">
-                <div className="flex gap-2">
-                  <span className="text-green shrink-0">✓</span>
-                  <span className="text-foreground w-14">USDC</span>
-                  <span className="text-accent w-20">8.2% APY</span>
-                  <span className="text-muted">$42M TVL</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-green shrink-0">✓</span>
-                  <span className="text-foreground w-14">ETH</span>
-                  <span className="text-accent w-20">3.1% APY</span>
-                  <span className="text-muted">$18M TVL</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-green shrink-0">✓</span>
-                  <span className="text-foreground w-14">cbBTC</span>
-                  <span className="text-accent w-20">4.7% APY</span>
-                  <span className="text-muted">$9M TVL</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Example prompts */}
-      <section className="max-w-3xl mx-auto px-6 pb-20 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {EXAMPLE_PROMPTS.map((prompt) => (
-            <div
-              key={prompt}
-              className="border border-border rounded-lg px-4 py-3 font-mono text-sm hover:border-accent/40 transition-all cursor-default group"
+          <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-sm sm:w-auto sm:max-w-none">
+            <CopySkillButton />
+            <a
+              href="#capabilities"
+              className="inline-flex items-center justify-center sm:justify-start gap-1 text-sm font-medium text-muted hover:text-foreground transition-colors duration-150 focus-ring-link"
             >
-              <span className="text-accent">❯ </span>
-              <span className="text-muted group-hover:text-foreground transition-colors">&ldquo;{prompt}&rdquo;</span>
-            </div>
-          ))}
+              See capabilities <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
+          <div className="w-full max-w-2xl mt-16">
+            <TerminalCard>
+              <TerminalDemo />
+            </TerminalCard>
+          </div>
+
+          <div className="w-full max-w-2xl mt-5">
+            <ExamplePrompts />
+          </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="border-y border-border bg-card/50 py-16">
+      <section className="border-y border-border bg-card/30 py-24">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="flex items-center gap-2 justify-center mb-10">
-            <span className="font-mono text-xs text-muted/50">{"// "}</span>
-            <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { step: "1", title: "Install the skill", desc: "Give your agent (OpenClaw, Hermes, Claude Code) the skill to teach them how to use the Moonwell CLI." },
-              { step: "2", title: "Prompt naturally", desc: "Ask your agent to check rates, supply tokens, or manage positions." },
-              { step: "3", title: "Review & execute", desc: "The agent prepares unsigned transactions. You review and submit when ready." },
-            ].map((s) => (
-              <div key={s.step} className="flex flex-col items-center text-center">
-                <div className="font-mono text-accent text-sm font-semibold mb-3">[{s.step}]</div>
-                <h3 className="font-medium mb-1">{s.title}</h3>
-                <p className="text-sm text-muted leading-relaxed">{s.desc}</p>
+          <Eyebrow className="mb-14">How it works</Eyebrow>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-8">
+            {STEPS.map((s) => (
+              <div key={s.step} className="space-y-3">
+                <div className="font-mono text-accent text-xs tracking-[0.2em]">{s.step}</div>
+                <h3 className="text-lg font-medium tracking-tight">{s.title}</h3>
+                <p className="text-[15px] text-muted leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Your risk */}
+      <section className="max-w-3xl mx-auto px-6 py-24 w-full">
+        <Eyebrow className="mb-6">Your risk</Eyebrow>
+        <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
+          Check account health before any write. Tiered thresholds signal distance from liquidation.
+        </p>
+        <HealthArtifact />
+      </section>
+
       {/* Capabilities */}
-      <section id="capabilities" className="max-w-5xl mx-auto px-6 py-20 w-full">
-        <div className="flex items-center gap-2 justify-center mb-10">
-          <span className="font-mono text-xs text-muted/50">{"// "}</span>
-          <h2 className="text-2xl font-semibold tracking-tight">Capabilities</h2>
-        </div>
+      <section id="capabilities" className="max-w-5xl mx-auto px-6 py-24 w-full scroll-mt-16">
+        <Eyebrow className="mb-10">Capabilities</Eyebrow>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {CAPABILITIES.map((group) => (
-            <div key={group.category} className="border border-border rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="font-mono text-xs font-semibold text-muted uppercase tracking-wider">{group.category}</span>
-                <div className="flex-1 h-px bg-border" />
+            <div key={group.category} className="bg-card/60 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <span className="font-mono text-[11px] font-semibold text-accent uppercase tracking-[0.2em]">{group.category}</span>
+                <div className="flex-1 h-px bg-border/60" />
               </div>
-              <ul className="space-y-3 font-mono">
+              <ul className="space-y-4 font-mono">
                 {group.items.map((item) => (
                   <li key={item.name} className="flex gap-2">
-                    <span className="text-accent text-sm shrink-0">{">"}</span>
+                    <span className="text-accent text-sm shrink-0 select-none" aria-hidden="true">{">"}</span>
                     <div>
                       <span className="text-sm text-foreground">{item.name}</span>
-                      <p className="text-xs text-muted mt-0.5 font-sans leading-relaxed">{item.desc}</p>
+                      <p className="text-xs text-muted mt-1 font-sans leading-relaxed">{item.desc}</p>
                     </div>
                   </li>
                 ))}
@@ -172,45 +175,53 @@ export default function Home() {
       </section>
 
       {/* Install */}
-      <section id="install" className="border-t border-border bg-card/50 py-20">
-        <div className="max-w-xl mx-auto px-6">
-          <div className="flex items-center gap-2 justify-center mb-3">
-            <span className="font-mono text-xs text-muted/50">{"// "}</span>
-            <h2 className="text-2xl font-semibold tracking-tight">Install</h2>
-          </div>
-          <div className="space-y-6">
+      <section id="install" className="relative border-t border-border bg-card/30 py-24 scroll-mt-16 overflow-hidden">
+        <LunarTerrain variant="footer" />
+        <div className="relative z-10 max-w-xl mx-auto px-6">
+          <Eyebrow className="mb-10">Install</Eyebrow>
+          <div className="space-y-8">
             <div>
-              <h3 className="font-mono text-xs font-medium text-muted uppercase tracking-wider mb-2">Share with your agent</h3>
-              <div className="bg-card border border-border rounded-lg px-4 py-3 text-sm font-mono flex items-center gap-3">
-                <span className="flex-1 overflow-x-auto">
-                  <span className="text-muted">{">"} </span>curl
-                  <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
-                </span>
-                <CopyButton text="curl https://agents.moonwell.fi/skill.md" />
-              </div>
+              <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Share with your agent</h3>
+              <InstallSnippet
+                prefix="❯"
+                prefixColor="accent"
+                copyText="curl https://agents.moonwell.fi/skill.md"
+              >
+                <span className="text-foreground">curl</span>
+                <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
+              </InstallSnippet>
             </div>
 
             <div>
-              <h3 className="font-mono text-xs font-medium text-muted uppercase tracking-wider mb-2">Or just install the CLI</h3>
-              <div className="bg-card border border-border rounded-lg px-4 py-3 text-sm font-mono flex items-center gap-3">
-                <span className="flex-1">
-                  <span className="text-muted">$ </span><span className="text-foreground">npm install @moonwell-fi/cli</span>
-                </span>
-                <CopyButton text="npm install @moonwell-fi/cli" />
-              </div>
+              <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Or install the CLI</h3>
+              <InstallSnippet
+                prefix="$"
+                prefixColor="muted"
+                copyText="npm install @moonwell-fi/cli"
+              >
+                <span className="text-foreground">npm install @moonwell-fi/cli</span>
+              </InstallSnippet>
+            </div>
+
+            <div className="pt-2 mt-2 border-t border-border/40">
+              <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3 mt-4">
+                <span className="select-none" aria-hidden="true">↳ </span>
+                Then prompt your agent
+              </h3>
+              <PromptCarousel />
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8">
+      <footer className="border-t border-border py-10 mt-auto">
         <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
           <span className="font-mono">agents.moonwell.fi</span>
           <div className="flex gap-6">
-            <a href="https://moonwell.fi" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Moonwell</a>
-            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
-            <a href="/skill.md" className="hover:text-foreground transition-colors">Skill</a>
+            <a href="https://moonwell.fi" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Moonwell</a>
+            <a href="https://github.com/moonwell-fi/moonwell-ai" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors duration-150 focus-ring-link">GitHub</a>
+            <a href="/skill.md" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Skill</a>
           </div>
         </div>
       </footer>

@@ -38,9 +38,23 @@ describe("resolvePrivateKey", () => {
   it("resolves from MOONWELL_PRIVATE_KEY_FILE env var", () => {
     const tmpFile = path.join(os.tmpdir(), "moonwell-test-key.hex");
     fs.writeFileSync(tmpFile, TEST_KEY_NO_PREFIX);
+    fs.chmodSync(tmpFile, 0o600);
     process.env.MOONWELL_PRIVATE_KEY_FILE = tmpFile;
     try {
       expect(resolvePrivateKey()).toBe(TEST_KEY);
+    } finally {
+      fs.unlinkSync(tmpFile);
+    }
+  });
+
+  it("rejects key file with insecure permissions", () => {
+    if (process.platform === "win32") return;
+    const tmpFile = path.join(os.tmpdir(), "moonwell-test-insecure-key.hex");
+    fs.writeFileSync(tmpFile, TEST_KEY_NO_PREFIX);
+    fs.chmodSync(tmpFile, 0o644);
+    process.env.MOONWELL_PRIVATE_KEY_FILE = tmpFile;
+    try {
+      expect(() => resolvePrivateKey()).toThrow("insecure permissions");
     } finally {
       fs.unlinkSync(tmpFile);
     }
@@ -63,13 +77,19 @@ describe("resolvePrivateKey", () => {
 
   it("rejects empty string flag (falls through to other sources)", () => {
     // Empty string is falsy, so it doesn't count as a flag override.
-    // Whether this throws depends on whether ~/.moonwell-cli/key.hex exists.
-    // We test that it doesn't crash — it either resolves or throws.
+    // Outcome depends on local ~/.moonwell-cli/key.hex state:
+    //   - no file        → "No private key found"
+    //   - file + 600     → valid hex key
+    //   - file + non-600 → "insecure permissions"
     try {
       const key = resolvePrivateKey("");
       expect(key).toMatch(/^0x[0-9a-fA-F]{64}$/);
     } catch (e) {
-      expect((e as Error).message).toContain("No private key found");
+      const msg = (e as Error).message;
+      const acceptable =
+        msg.includes("No private key found") ||
+        msg.includes("insecure permissions");
+      expect(acceptable).toBe(true);
     }
   });
 

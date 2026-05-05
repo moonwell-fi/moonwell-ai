@@ -47,6 +47,15 @@ export function resolvePrivateKey(flagOverride?: string): `0x${string}` {
 
 function readKeyFile(filePath: string): `0x${string}` {
   try {
+    if (process.platform !== "win32") {
+      const stats = fs.statSync(filePath);
+      if ((stats.mode & 0o077) !== 0) {
+        throw usage(
+          `Key file ${filePath} has insecure permissions (mode ${(stats.mode & 0o777).toString(8)}). ` +
+          `Expected owner-only access. Run: chmod 600 ${filePath}`,
+        );
+      }
+    }
     const content = fs.readFileSync(filePath, "utf-8").trim();
     return validateKey(normalizeKey(content), filePath);
   } catch (err) {

@@ -1,0 +1,146 @@
+export type OutputColor = 'foreground' | 'accent' | 'muted' | 'green' | 'orange' | 'red';
+
+export type OutputRow =
+  | { type: 'cmd'; text: string }
+  | { type: 'header'; text: string }
+  | { type: 'asset'; text: string }
+  | { type: 'kv'; key: string; value: string; valueColor?: OutputColor }
+  | { type: 'kvkv'; k1: string; v1: string; k2: string; v2: string }
+  | { type: 'step'; name: string; desc: string }
+  | { type: 'blank' };
+
+export type ScriptId = 'yield' | 'supply' | 'rates' | 'health' | 'borrow' | 'rewards';
+
+export type Script = {
+  id: ScriptId;
+  prompt: string;
+  command: string;
+  scanLine: string;
+  rows: OutputRow[];
+};
+
+export const SCRIPTS: Record<ScriptId, Script> = {
+  yield: {
+    id: 'yield',
+    prompt: 'What are the best yield opportunities on Moonwell right now?',
+    command: 'moonwell yield --sort apy --limit 3 --chain base',
+    scanLine: 'Fetching yield opportunities',
+    rows: [
+      { type: 'header', text: 'Moonwell Yield — Base' },
+      { type: 'asset', text: 'VIRTUAL' },
+      { type: 'kvkv', k1: 'Supply APY', v1: '22.77%', k2: 'TVL', v2: '$2.1M' },
+      { type: 'blank' },
+      { type: 'asset', text: 'USDS' },
+      { type: 'kvkv', k1: 'Supply APY', v1: '3.16%', k2: 'TVL', v2: '$11.6K' },
+      { type: 'blank' },
+      { type: 'asset', text: 'cbXRP' },
+      { type: 'kvkv', k1: 'Supply APY', v1: '2.98%', k2: 'TVL', v2: '$3.4M' },
+    ],
+  },
+  supply: {
+    id: 'supply',
+    prompt: 'Supply 100 USDC to Moonwell on Base',
+    command: 'moonwell supply --asset USDC --amount-decimal 100 --from 0x... --chain base',
+    scanLine: 'Preparing supply',
+    rows: [
+      { type: 'header', text: 'Supply — Base' },
+      { type: 'kv', key: 'Asset', value: '100 USDC' },
+      { type: 'kv', key: 'mToken', value: '0xEdc8…6c22' },
+      { type: 'kv', key: 'Est. APY', value: '2.37%' },
+      { type: 'kv', key: 'Steps', value: '3' },
+      { type: 'blank' },
+      { type: 'step', name: 'approve', desc: 'Approve token for Moonwell supply' },
+      { type: 'step', name: 'enter-market', desc: 'Enable asset as collateral on Moonwell' },
+      { type: 'step', name: 'moonwell-supply', desc: 'Supply asset to Moonwell' },
+      { type: 'blank' },
+      { type: 'kv', key: 'Simulation', value: 'Passed (gas: 56,240)', valueColor: 'green' },
+    ],
+  },
+  rates: {
+    id: 'rates',
+    prompt: 'Compare USDC supply rates on Base and Optimism',
+    command: 'moonwell rates --asset USDC --chain base && moonwell rates --asset USDC --chain optimism',
+    scanLine: 'Fetching rates on base, optimism',
+    rows: [
+      { type: 'header', text: 'Moonwell Rates — Base' },
+      { type: 'asset', text: 'USDC' },
+      { type: 'kv', key: 'Supply APY', value: '2.37%' },
+      { type: 'kv', key: 'Borrow APY', value: '3.89%' },
+      { type: 'kv', key: 'Utilization', value: '68.12%' },
+      { type: 'blank' },
+      { type: 'header', text: 'Moonwell Rates — Optimism' },
+      { type: 'asset', text: 'USDC' },
+      { type: 'kv', key: 'Supply APY', value: '1.40%' },
+      { type: 'kv', key: 'Borrow APY', value: '2.82%' },
+      { type: 'kv', key: 'Utilization', value: '55.53%' },
+    ],
+  },
+  health: {
+    id: 'health',
+    prompt: 'Check my health factor on Moonwell',
+    command: 'moonwell health --address 0x... --chain base',
+    scanLine: 'Checking account health',
+    rows: [
+      { type: 'header', text: 'Moonwell Health — Base' },
+      { type: 'kv', key: 'Address', value: '0x1234…abcd' },
+      { type: 'kv', key: 'Total Supplied', value: '$1,240.00' },
+      { type: 'kv', key: 'Total Borrowed', value: '$240.00' },
+      { type: 'kv', key: 'Adj. Collateral', value: '$1,100.00' },
+      { type: 'kv', key: 'Health Factor', value: '4.58', valueColor: 'green' },
+      { type: 'kv', key: 'Markets', value: '3' },
+    ],
+  },
+  borrow: {
+    id: 'borrow',
+    prompt: 'Borrow 20 USDC against my collateral',
+    command: 'moonwell borrow --asset USDC --amount-decimal 20 --from 0x... --chain base',
+    scanLine: 'Preparing borrow',
+    rows: [
+      { type: 'header', text: 'Borrow — Base' },
+      { type: 'kv', key: 'Asset', value: '20 USDC' },
+      { type: 'kv', key: 'mToken', value: '0xEdc8…6c22' },
+      { type: 'kv', key: 'Est. APY', value: '3.89%' },
+      { type: 'kv', key: 'Steps', value: '1' },
+      { type: 'blank' },
+      { type: 'step', name: 'moonwell-borrow', desc: 'Borrow asset from Moonwell' },
+      { type: 'blank' },
+      { type: 'kv', key: 'Simulation', value: 'Passed (gas: 292,136)', valueColor: 'green' },
+    ],
+  },
+  rewards: {
+    id: 'rewards',
+    prompt: 'Show my pending WELL rewards',
+    command: 'moonwell rewards --address 0x... --chain base',
+    scanLine: 'Fetching rewards',
+    rows: [
+      { type: 'header', text: 'Moonwell Rewards — Base' },
+      { type: 'asset', text: 'USDC → WELL' },
+      { type: 'kv', key: 'Supply Rewards', value: '$4.80' },
+      { type: 'kv', key: 'Borrow Rewards', value: '$0.00' },
+      { type: 'blank' },
+      { type: 'asset', text: 'ETH → WELL' },
+      { type: 'kv', key: 'Supply Rewards', value: '$1.20' },
+      { type: 'kv', key: 'Borrow Rewards', value: '$0.00' },
+    ],
+  },
+};
+
+export const PROMPT_ORDER: ReadonlyArray<ScriptId> = [
+  'yield',
+  'supply',
+  'rates',
+  'health',
+  'borrow',
+  'rewards',
+];
+
+export const RUN_SCRIPT_EVENT = 'moonwell:run-script';
+export const TERMINAL_READY_EVENT = 'moonwell:terminal-ready';
+
+export function isScriptId(id: string): id is ScriptId {
+  return id in SCRIPTS;
+}
+
+export function dispatchRunScript(id: ScriptId) {
+  window.dispatchEvent(new CustomEvent(RUN_SCRIPT_EVENT, { detail: id }));
+}
