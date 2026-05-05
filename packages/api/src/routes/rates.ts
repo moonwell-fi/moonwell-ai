@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Market } from "@moonwell-fi/moonwell-sdk";
 import type { Env } from "../env.js";
 import { setupChain } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
@@ -7,7 +8,7 @@ const READ_CACHE_SECONDS = 30;
 
 const rates = new Hono<{ Bindings: Env }>();
 
-function utilization(m: { totalSupplyUsd: number; totalBorrowsUsd: number }): number {
+function utilization(m: Pick<Market, "totalSupplyUsd" | "totalBorrowsUsd">): number {
   return m.totalSupplyUsd > 0 ? m.totalBorrowsUsd / m.totalSupplyUsd : 0;
 }
 
@@ -25,7 +26,7 @@ rates.get("/", async (c) => {
     if (asset) {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
-        (m: any) => m.underlyingToken.symbol.toUpperCase() === sym,
+        (m) => m.underlyingToken.symbol.toUpperCase() === sym,
       );
     }
 
@@ -33,7 +34,7 @@ rates.get("/", async (c) => {
       c,
       "rates",
       chain.chainId,
-      filtered.map((m: any) => ({
+      filtered.map((m) => ({
         asset: m.underlyingToken.symbol,
         baseSupplyApy: m.baseSupplyApy,
         baseBorrowApy: m.baseBorrowApy,

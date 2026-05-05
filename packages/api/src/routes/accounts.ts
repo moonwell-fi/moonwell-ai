@@ -23,7 +23,7 @@ accounts.get("/positions/:address", async (c) => {
     if (asset) {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
-        (p: any) => p.market.symbol.toUpperCase() === sym,
+        (p) => p.market.symbol.toUpperCase() === sym,
       );
     }
 
@@ -31,7 +31,7 @@ accounts.get("/positions/:address", async (c) => {
       c,
       "positions",
       chain.chainId,
-      filtered.map((p: any) => ({
+      filtered.map((p) => ({
         market: p.market.symbol,
         marketAddress: p.market.address,
         suppliedUsd: p.suppliedUsd,
@@ -61,7 +61,7 @@ accounts.get("/health/:address", async (c) => {
     let totalSupplyUsd = 0;
     let totalBorrowUsd = 0;
     let totalCollateralUsd = 0;
-    for (const p of positions as any[]) {
+    for (const p of positions) {
       totalSupplyUsd += p.suppliedUsd;
       totalBorrowUsd += p.borrowedUsd;
       totalCollateralUsd += p.collateralUsd;
@@ -100,7 +100,7 @@ accounts.get("/rewards/:address", async (c) => {
       c,
       "rewards",
       chain.chainId,
-      (rewards as any[]).map((r) => ({
+      rewards.map((r) => ({
         market: r.market.symbol,
         rewardToken: r.rewardToken.symbol,
         supplyRewardsUsd: r.supplyRewardsUsd,
@@ -125,12 +125,12 @@ accounts.get("/token-balance/:address", async (c) => {
       chainId: chain.chainId,
     });
 
-    let filtered = [...(balances as any[])];
+    let filtered = [...balances];
     const asset = c.req.query("asset");
     if (asset) {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
-        (b: any) => b.token.symbol.toUpperCase() === sym,
+        (b) => b.token.symbol.toUpperCase() === sym,
       );
     }
 
@@ -138,7 +138,7 @@ accounts.get("/token-balance/:address", async (c) => {
       c,
       "token-balance",
       chain.chainId,
-      filtered.map((b: any) => ({
+      filtered.map((b) => ({
         token: b.token.symbol,
         address: b.token.address,
         balance: b.tokenBalance.value,

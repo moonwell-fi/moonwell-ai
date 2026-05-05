@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Market } from "@moonwell-fi/moonwell-sdk";
 import type { Env } from "../env.js";
 import { setupChain, parsePositiveInt } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
@@ -7,11 +8,11 @@ const READ_CACHE_SECONDS = 30;
 
 const markets = new Hono<{ Bindings: Env }>();
 
-function utilization(m: { totalSupplyUsd: number; totalBorrowsUsd: number }): number {
+function utilization(m: Pick<Market, "totalSupplyUsd" | "totalBorrowsUsd">): number {
   return m.totalSupplyUsd > 0 ? m.totalBorrowsUsd / m.totalSupplyUsd : 0;
 }
 
-function marketToJson(m: any): Record<string, unknown> {
+function marketToJson(m: Market): Record<string, unknown> {
   return {
     asset: m.underlyingToken.symbol,
     assetAddress: m.underlyingToken.address,
@@ -47,13 +48,13 @@ markets.get("/", async (c) => {
     if (asset) {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
-        (m: any) =>
+        (m) =>
           m.underlyingToken.symbol.toUpperCase() === sym ||
           m.marketToken.symbol.toUpperCase() === sym,
       );
     }
 
-    filtered.sort((a: any, b: any) => {
+    filtered.sort((a, b) => {
       switch (sortKey) {
         case "supply-apy":
           return b.baseSupplyApy - a.baseSupplyApy;
@@ -89,7 +90,7 @@ markets.get("/:id", async (c) => {
     const idLower = id.toLowerCase();
     const sym = id.toUpperCase();
 
-    const market = list.find((m: any) => {
+    const market = list.find((m) => {
       if (isAddress) {
         return (
           m.underlyingToken.address.toLowerCase() === idLower ||

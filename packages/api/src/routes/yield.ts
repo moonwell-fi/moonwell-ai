@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Market } from "@moonwell-fi/moonwell-sdk";
 import type { Env } from "../env.js";
 import { setupChain, parsePositiveInt, parseNonNegativeFloat } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
@@ -26,15 +27,15 @@ yieldRoute.get("/", async (c) => {
     if (asset) {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
-        (m: any) => m.underlyingToken.symbol.toUpperCase() === sym,
+        (m) => m.underlyingToken.symbol.toUpperCase() === sym,
       );
     }
 
     if (minTvl !== undefined) {
-      filtered = filtered.filter((m: any) => m.totalSupplyUsd >= minTvl);
+      filtered = filtered.filter((m) => m.totalSupplyUsd >= minTvl);
     }
 
-    filtered.sort((a: any, b: any) =>
+    filtered.sort((a, b) =>
       sortKey === "tvl"
         ? b.totalSupplyUsd - a.totalSupplyUsd
         : b.baseSupplyApy - a.baseSupplyApy,
@@ -48,7 +49,7 @@ yieldRoute.get("/", async (c) => {
       c,
       "yield",
       chain.chainId,
-      filtered.map((m: any) => ({
+      filtered.map((m: Market) => ({
         asset: m.underlyingToken.symbol,
         assetAddress: m.underlyingToken.address,
         baseSupplyApy: m.baseSupplyApy,

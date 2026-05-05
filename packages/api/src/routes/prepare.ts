@@ -32,7 +32,7 @@ prepare.post("/:verb", async (c) => {
     chainId = chain.chainId;
 
     const markets = await sdkClient.getMarkets({ chainId: chain.chainId });
-    const market = (markets as any[]).find(
+    const market = markets.find(
       (m) => m.underlyingToken.symbol.toUpperCase() === parsed.asset.toUpperCase(),
     );
     if (!market) {
@@ -57,7 +57,7 @@ prepare.post("/:verb", async (c) => {
 
     // Pass the SDK markets list as hints so we skip the
     // Comptroller.getAllMarkets() + multicall round-trip on the happy path.
-    const marketHints = (markets as any[]).map((m) => ({
+    const marketHints = markets.map((m) => ({
       mTokenAddress: getAddress(m.marketToken.address) as Address,
       underlyingAddress: getAddress(m.underlyingToken.address) as Address,
     }));
