@@ -1,0 +1,50 @@
+name: Deploy Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/web/**"
+      - "packages/skill/SKILL.md"
+      - ".github/workflows/deploy-web.yml"
+      - ".github/actions/install-dependencies/**"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Verify
+    uses: ./.github/workflows/verify.yml
+    secrets: inherit
+    concurrency:
+      group: deploy-web-verify-${{ github.ref }}
+      cancel-in-progress: true
+
+  deploy:
+    name: Deploy to Cloudflare
+    needs: verify
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    concurrency:
+      group: deploy-web-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Build static site
+        # `prebuild` (in packages/web/package.json) syncs SKILL.md from
+        # packages/skill into public/ before `next build` writes to ./out.
+        run: pnpm --filter @moonwell-ai/web build
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: packages/web
+          command: deploy

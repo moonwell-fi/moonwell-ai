@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "moonwell-web",
+  "compatibility_date": "2025-04-01",
+
+  // Pin to the Moonwell account — the auth user has multiple accounts and
+  // wrangler errors with "more than one account available" without this.
+  "account_id": "0c8ff75c8d6b6a05bb38e2674cca703f",
+
+  "observability": {
+    "enabled": true
+  },
+
+  // Workers Static Assets — serves the static export from packages/web/out
+  // produced by `next build` (next.config.ts has `output: "export"`).
+  "assets": {
+    "directory": "./out",
+    // next.config.ts has `trailingSlash: true`, so /foo → /foo/
+    "html_handling": "force-trailing-slash",
+    // Next emits out/404.html for the not-found route
+    "not_found_handling": "404-page"
+  },
+
+  // Custom domain — first deploy creates the route automatically as long as
+  // `moonwell.fi` is on the same Cloudflare account.
+  //
+  // IMPORTANT: if `agents.moonwell.fi` is currently bound to a Cloudflare
+  // Pages project, remove the Pages domain binding first or this deploy will
+  // conflict. Workers Static Assets and Pages are mutually exclusive on the
+  // same hostname.
+  "routes": [
+    {
+      "pattern": "agents.moonwell.fi",
+      "custom_domain": true
+    }
+  ]
+
+  // Headers note: the legacy Cloudflare Pages `_headers` file at
+  // public/_headers is NOT read by Workers Static Assets. Same security
+  // headers (CSP / HSTS / X-Frame-Options) need to be re-applied via either:
+  //   - Cloudflare dashboard → Rules → Transform Rules → Modify Response Header
+  //   - or a thin Worker fetch handler that wraps the ASSETS binding
+  // The brochure surface has no auth / no XSS sinks, so this is acceptable as
+  // a follow-up rather than a blocker. See packages/web/AGENTS.md.
+}
