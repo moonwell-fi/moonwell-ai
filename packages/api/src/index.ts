@@ -29,7 +29,19 @@ app.use("*", cors({
   maxAge: 86400,
 }));
 
-app.get("/", (c) => c.redirect("https://agents.moonwell.fi", 302));
+// JSON probe at `/`. Used to be a 302 → agents.moonwell.fi, but wrangler dev
+// rewrites the Host header to the configured custom_domain, making any
+// host-based gate fire locally too. A small JSON envelope with a docs link
+// works the same for browsers and is friendlier to curl/scripts.
+app.get("/", (c) =>
+  c.json({
+    ok: true,
+    service: "moonwell-api",
+    environment: c.env.ENVIRONMENT,
+    docs: "https://agents.moonwell.fi/skill.md",
+    hint: "Try /v1/_health or /v1/markets?chain=base",
+  }),
+);
 
 /**
  * Liveness + (optionally) readiness probe.

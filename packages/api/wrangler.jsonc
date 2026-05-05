@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "moonwell-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Pin to the Moonwell account — the auth user has multiple accounts and
+  // wrangler errors with "more than one account available" without this.
+  "account_id": "0c8ff75c8d6b6a05bb38e2674cca703f",
+
+  "observability": {
+    "enabled": true
+  },
+
+  // Custom domain — first deploy creates the route automatically as long as
+  // `moonwell.fi` is on the same Cloudflare account. Custom domains cover all
+  // paths automatically; wildcards and trailing /* are not allowed here.
+  "routes": [
+    {
+      "pattern": "api.moonwell.fi",
+      "custom_domain": true
+    }
+  ],
+
+  // Plain (non-secret) environment variables. Surface here, not in code.
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+
+  // ---------------------------------------------------------------------------
+  // Secrets (NOT declared here — set out-of-band; values must never be committed)
+  //
+  // Required at runtime (see src/env.ts):
+  //   BASE_RPC_URL       — Base mainnet RPC URL (e.g. Alchemy/QuickNode)
+  //   OPTIMISM_RPC_URL   — Optimism mainnet RPC URL
+  //
+  // Set via:
+  //   pnpm exec wrangler secret put BASE_RPC_URL
+  //   pnpm exec wrangler secret put OPTIMISM_RPC_URL
+  //
+  // Local dev uses packages/api/.dev.vars (gitignored) — see AGENTS.md.
+  // ---------------------------------------------------------------------------
+}

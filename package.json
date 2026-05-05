@@ -9,6 +9,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev:web": "pnpm --filter @moonwell-ai/web dev",
+    "dev:api": "pnpm --filter @moonwell-ai/api dev",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "lint": "pnpm --filter @moonwell-ai/web lint",

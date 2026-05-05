@@ -210,10 +210,17 @@ describe("CORS", () => {
   });
 });
 
-describe("root redirect", () => {
-  it("/ redirects to agents.moonwell.fi", async () => {
+describe("root", () => {
+  it("/ returns a JSON probe with a docs link", async () => {
     const res = await app.request("/", undefined, ENV);
-    expect(res.status).toBe(302);
-    expect(res.headers.get("location")).toBe("https://agents.moonwell.fi");
+    expect(res.status).toBe(200);
+    const body = await asJson<{
+      ok: boolean;
+      service: string;
+      docs: string;
+    }>(res);
+    expect(body.ok).toBe(true);
+    expect(body.service).toBe("moonwell-api");
+    expect(body.docs).toBe("https://agents.moonwell.fi/skill.md");
   });
 });

@@ -49,9 +49,10 @@ curl 'https://api.moonwell.fi/v1/_health?deep=1'       # readiness — verifies 
 
 ```bash
 pnpm install
-echo 'BASE_RPC_URL=https://...' > .dev.vars
+echo 'ENVIRONMENT=development' > .dev.vars
+echo 'BASE_RPC_URL=https://...' >> .dev.vars
 echo 'OPTIMISM_RPC_URL=https://...' >> .dev.vars
-pnpm dev    # http://localhost:8787
+pnpm dev    # http://localhost:8787 — or `pnpm dev:api` from repo root
 ```
 
 See [AGENTS.md](./AGENTS.md) for architecture, the duplication policy, and the operational checklist before going public (Cloudflare WAF rate limit rule, bot mode, uptime probe).

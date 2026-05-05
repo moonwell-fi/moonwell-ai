@@ -65,7 +65,7 @@ CI enforces the sync via `node scripts/sync-shared-libs.mjs --check` in `verify.
 
 ## Non-obvious
 
-- `nodejs_compat` flag is set in `wrangler.toml` because `viem` and `@moonwell-fi/moonwell-sdk` use a few Node primitives (`Buffer`, `crypto`).
+- `nodejs_compat` flag is set in `wrangler.jsonc` because `viem` and `@moonwell-fi/moonwell-sdk` use a few Node primitives (`Buffer`, `crypto`).
 - Workers re-use the V8 isolate across requests. Don't put per-user state in module scope. Each request creates a fresh SDK + viem client.
 - Read endpoints (`/v1/markets`, `/v1/yield`, `/v1/markets/:id`) are cacheable: 30s `Cache-Control` plus Workers `caches.default`. User-scoped reads (`/v1/positions/:address`, `/v1/health/:address`, `/v1/rewards/:address`, `/v1/token-balance/:address`) use `Cache-Control: private, no-store`.
 - All responses use the envelope `{ success, data, meta, error? }` matching the CLI's JSON output (see `src/lib/output.ts` and the CLI's same file).
@@ -76,11 +76,14 @@ CI enforces the sync via `node scripts/sync-shared-libs.mjs --check` in `verify.
 Create `packages/api/.dev.vars` (gitignored — never committed):
 
 ```
+ENVIRONMENT=development
 BASE_RPC_URL=https://base-mainnet.g.alchemy.com/v2/YOUR_KEY
 OPTIMISM_RPC_URL=https://opt-mainnet.g.alchemy.com/v2/YOUR_KEY
 ```
 
-Then `pnpm dev` will pick them up automatically.
+`ENVIRONMENT=development` is optional — it only changes the `environment` field reported in `/v1/_health` and the JSON probe at `/`.
+
+Then `pnpm dev` (in `packages/api`) or `pnpm dev:api` (from repo root) will pick them up automatically.
 
 ## Quality bar
 
