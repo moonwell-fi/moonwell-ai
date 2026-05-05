@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../env.js";
-import { setupChain } from "../lib/context.js";
+import { setupChain, parsePositiveInt } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 
 const READ_CACHE_SECONDS = 30;
@@ -61,9 +61,9 @@ markets.get("/", async (c) => {
       }
     });
 
-    const limit = c.req.query("limit");
-    if (limit) {
-      filtered = filtered.slice(0, parseInt(limit, 10));
+    const limit = parsePositiveInt(c.req.query("limit"), "limit");
+    if (limit !== undefined) {
+      filtered = filtered.slice(0, limit);
     }
 
     return ok(c, "markets", chain.chainId, filtered.map(marketToJson), {

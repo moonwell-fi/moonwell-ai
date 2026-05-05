@@ -34,6 +34,30 @@ export function requireAddress(value: string | undefined, paramName = "address")
   return value.toLowerCase() as `0x${string}`;
 }
 
+/**
+ * Parse an optional positive integer query param. Throws a USAGE error on
+ * non-numeric or negative input rather than silently producing an empty result
+ * (which is what `slice(0, NaN)` and friends would otherwise do).
+ */
+export function parsePositiveInt(value: string | undefined, name: string): number | undefined {
+  if (value === undefined) return undefined;
+  const n = Number.parseInt(value, 10);
+  if (!Number.isFinite(n) || n < 0 || String(n) !== value.trim()) {
+    throw usage(`Invalid ${name}: "${value}" (expected non-negative integer)`);
+  }
+  return n;
+}
+
+/** Parse an optional non-negative float query param. Throws on bad input. */
+export function parseNonNegativeFloat(value: string | undefined, name: string): number | undefined {
+  if (value === undefined) return undefined;
+  const n = Number.parseFloat(value);
+  if (!Number.isFinite(n) || n < 0) {
+    throw usage(`Invalid ${name}: "${value}" (expected non-negative number)`);
+  }
+  return n;
+}
+
 interface PrepareBody {
   chain?: string;
   asset?: string;

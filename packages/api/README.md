@@ -36,6 +36,15 @@ All responses use `{ success, data, meta, error? }`. See <https://agents.moonwel
 
 Prepare body: `{ chain, asset, amountDecimal | amount, from, simulate? }`.
 
+## Health probe
+
+```bash
+curl 'https://api.moonwell.fi/v1/_health'              # liveness
+curl 'https://api.moonwell.fi/v1/_health?deep=1'       # readiness — verifies RPC per chain
+```
+
+`?deep=1` returns 503 if any supported chain's RPC is unreachable.
+
 ## Local development
 
 ```bash
@@ -45,4 +54,4 @@ echo 'OPTIMISM_RPC_URL=https://...' >> .dev.vars
 pnpm dev    # http://localhost:8787
 ```
 
-See [AGENTS.md](./AGENTS.md) for architecture and the duplication policy.
+See [AGENTS.md](./AGENTS.md) for architecture, the duplication policy, and the operational checklist before going public (Cloudflare WAF rate limit rule, bot mode, uptime probe).

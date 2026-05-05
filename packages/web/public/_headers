@@ -1,3 +1,15 @@
+# Cloudflare Pages reads this file as the edge header config.
+# Lines beginning with `#` are comments and are ignored at deploy time.
+#
+# CSP keeps `'unsafe-inline'` for script-src and style-src because:
+#   - Next.js 16's static export emits an inline runtime bootstrap script
+#   - Tailwind v4 emits inline @media style blocks for arbitrary breakpoints
+# Both are well-known limitations of the static-export + Tailwind-v4 combo.
+# Tightening these requires either adopting nonce/hash CSP (needs a Worker
+# in front of Pages to inject per-request) or migrating off static export.
+# Acceptable here because the site is a brochure: no user input, no auth,
+# no XSS sinks. Revisit if any of those change.
+
 /*
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   X-Content-Type-Options: nosniff

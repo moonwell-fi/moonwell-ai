@@ -38,9 +38,9 @@ src/
     moonwell.ts           # SDK client factory (worker variant — RPCs from env)
     mtoken-resolver.ts
     types.ts              # PrepareResult, UnsignedTx, etc.
-    errors.ts             # MoonwellError, exit codes
+    errors.ts             # MoonwellError + HttpStatus mapping
     client.ts             # viem PublicClient factory (worker variant — RPC required)
-    output.ts             # JSON envelope helpers (no console / chalk)
+    json-output.ts        # JSON envelope helpers (worker only — no chalk / console)
 test/
   prepare.test.ts
   amount.test.ts
@@ -59,7 +59,9 @@ pnpm sync-shared
 git diff packages/api/src/lib/   # review what changed
 ```
 
-`pnpm sync-shared` (root) runs `scripts/sync-shared-libs.mjs`. It copies the agreed-upon files; **`client.ts`, `moonwell.ts`, and `output.ts` are intentionally divergent and excluded from the sync** — the worker variants take RPC URLs from env bindings (`c.env.BASE_RPC_URL`) and produce JSON only (no chalk/console).
+`pnpm sync-shared` (root) runs `scripts/sync-shared-libs.mjs`. It copies the agreed-upon files; **`client.ts`, `moonwell.ts`, and `json-output.ts` are intentionally divergent and excluded from the sync** — the worker variants take RPC URLs from env bindings (`c.env.BASE_RPC_URL`) and produce JSON only (no chalk/console). `json-output.ts` is named differently from the CLI's `output.ts` on purpose: same-name-different-content is a footgun for grep and for manual hand-syncs.
+
+CI enforces the sync via `node scripts/sync-shared-libs.mjs --check` in `verify.yml`. Forgetting to run `pnpm sync-shared` after editing a CLI lib file fails the PR build.
 
 ## Non-obvious
 
@@ -85,4 +87,18 @@ Then `pnpm dev` will pick them up automatically.
 - `pnpm typecheck` passes
 - `pnpm test` passes
 - `pnpm build` (wrangler dry-run) passes
+- `pnpm sync-shared --check` clean (CI enforces this)
 - Smoke at least one read + one prepare endpoint via `wrangler dev` before committing
+
+## Operational checklist before flipping public DNS
+
+The API is open by design (no app-level auth) — abuse protection is delegated to Cloudflare's edge. Configure these in the Cloudflare dashboard before pointing `api.moonwell.fi` at the worker:
+
+1. **Rate limiting rule** — Security → WAF → Rate limiting rules. Recommended starting point:
+   - Match: `(http.host eq "api.moonwell.fi")`
+   - Characteristic: `cf.connecting_ip`
+   - Period: 10s, Requests: 30, Action: Block (10s)
+   - Add a second rule for `/v1/prepare/*` at a tighter budget (e.g. 5 req / 10s) since each call burns gas-estimation RPC.
+2. **Bot Fight Mode** — Security → Bots → enable. Free; catches naïve scrapers.
+3. **Deep health probe** — point uptime monitoring at `https://api.moonwell.fi/v1/_health?deep=1`. The `?deep=1` variant verifies RPC reachability per chain and returns 503 if any chain is down.
+4. **RPC secrets present** — `wrangler secret list` from `packages/api` should show `BASE_RPC_URL` and `OPTIMISM_RPC_URL`.

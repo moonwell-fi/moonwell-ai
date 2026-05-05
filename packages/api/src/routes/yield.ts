@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../env.js";
-import { setupChain } from "../lib/context.js";
+import { setupChain, parsePositiveInt, parseNonNegativeFloat } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 
 const READ_CACHE_SECONDS = 30;
@@ -25,10 +25,9 @@ yieldRoute.get("/", async (c) => {
       );
     }
 
-    const minTvl = c.req.query("min-tvl");
-    if (minTvl) {
-      const min = parseFloat(minTvl);
-      filtered = filtered.filter((m: any) => m.totalSupplyUsd >= min);
+    const minTvl = parseNonNegativeFloat(c.req.query("min-tvl"), "min-tvl");
+    if (minTvl !== undefined) {
+      filtered = filtered.filter((m: any) => m.totalSupplyUsd >= minTvl);
     }
 
     const sortKey = c.req.query("sort") ?? "apy";
@@ -38,9 +37,9 @@ yieldRoute.get("/", async (c) => {
         : b.baseSupplyApy - a.baseSupplyApy,
     );
 
-    const limit = c.req.query("limit");
-    if (limit) {
-      filtered = filtered.slice(0, parseInt(limit, 10));
+    const limit = parsePositiveInt(c.req.query("limit"), "limit");
+    if (limit !== undefined) {
+      filtered = filtered.slice(0, limit);
     }
 
     return ok(

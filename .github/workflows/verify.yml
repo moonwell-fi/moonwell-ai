@@ -6,7 +6,7 @@ on:
 jobs:
   verify:
     name: Typecheck, test, build
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     steps:
       - name: Clone repository
@@ -14,6 +14,9 @@ jobs:
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
+
+      - name: Shared libs in sync (CLI ↔ API)
+        run: node scripts/sync-shared-libs.mjs --check
 
       - name: Typecheck
         run: pnpm typecheck

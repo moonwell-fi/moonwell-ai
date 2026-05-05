@@ -31,10 +31,12 @@ const SYNCED = [
 ];
 
 // Files that intentionally diverge — manual reconciliation only.
+// (The worker variants are named differently where appropriate to make the
+// split obvious in code review and avoid accidental hand-syncs.)
 const EXCLUDED_NOTE = [
   "client.ts (worker takes rpcUrl from env, not flag)",
   "moonwell.ts (worker is stateless, no module cache)",
-  "output.ts (no chalk/console — JSON helpers + bigint-safe stringify)",
+  "json-output.ts (worker only — no chalk/console; bigint-safe stringify)",
 ];
 
 const checkOnly = process.argv.includes("--check");

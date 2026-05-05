@@ -42,9 +42,6 @@ importers:
       vitest:
         specifier: ^3.1.2
         version: 3.2.4(@types/debug@4.1.13)(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)
-      wrangler:
-        specifier: ^3.90.0
-        version: 3.114.17(@cloudflare/workers-types@4.20260504.1)
 
   packages/cli:
     dependencies:

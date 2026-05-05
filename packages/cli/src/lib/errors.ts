@@ -39,14 +39,16 @@ export function exitCode(err: unknown): number {
  * HTTP status mapping for the worker API. Exported here (rather than in API
  * package code) so this module stays a single source of truth across CLI + API.
  */
-export const HTTP_STATUS: Record<MoonwellError["code"], number> = {
+export type HttpStatus = 400 | 500 | 503;
+
+export const HTTP_STATUS: Record<MoonwellError["code"], HttpStatus> = {
   USAGE: 400,
   UNSUPPORTED: 400,
   UNAVAILABLE: 503,
   INTERNAL: 500,
 };
 
-export function statusFor(err: unknown): number {
+export function statusFor(err: unknown): HttpStatus {
   if (err instanceof MoonwellError) {
     return HTTP_STATUS[err.code];
   }

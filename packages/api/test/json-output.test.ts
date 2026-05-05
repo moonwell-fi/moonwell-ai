@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { envelope, errorEnvelope, stringify } from "../src/lib/output.js";
+import { envelope, errorEnvelope, stringify } from "../src/lib/json-output.js";
 
 describe("envelope", () => {
   it("builds an ok envelope", () => {

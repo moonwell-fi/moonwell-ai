@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { envelope, errorEnvelope, stringify } from "./output.js";
+import { envelope, errorEnvelope, stringify } from "./json-output.js";
 import { MoonwellError, statusFor } from "./errors.js";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
@@ -43,7 +43,7 @@ export function fail(
   }
   return c.body(
     stringify(errorEnvelope(command, chainId, message)),
-    status as 400 | 500 | 503,
+    status,
     { ...JSON_HEADERS, "cache-control": "private, no-store" },
   );
 }
