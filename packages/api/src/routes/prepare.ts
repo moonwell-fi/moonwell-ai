@@ -55,11 +55,18 @@ prepare.post("/:verb", async (c) => {
       amountDecimal = parsed.amountDecimal!;
     }
 
+    // Pass the SDK markets list as hints so we skip the
+    // Comptroller.getAllMarkets() + multicall round-trip on the happy path.
+    const marketHints = (markets as any[]).map((m) => ({
+      mTokenAddress: getAddress(m.marketToken.address) as Address,
+      underlyingAddress: getAddress(m.underlyingToken.address) as Address,
+    }));
     const mToken = await resolveMToken(
       viemClient,
       chain.chainId,
       assetAddress,
       parsed.poolAddress,
+      marketHints,
     );
 
     const result = await prepareLendAction({

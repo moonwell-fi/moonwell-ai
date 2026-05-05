@@ -4,18 +4,30 @@ import { comptrollerAbi, mTokenAbi } from "./abis.js";
 import { getContracts } from "./contracts.js";
 import { unsupported, usage } from "./errors.js";
 
+export interface MarketHint {
+  mTokenAddress: Address;
+  underlyingAddress: Address;
+}
+
 /**
  * Resolve the mToken address for a given underlying asset.
  *
- * If poolAddress is provided explicitly (via --pool-address), use it directly.
- * Otherwise, query Comptroller.getAllMarkets() and batch-resolve underlying()
- * to find the matching mToken.
+ * Resolution order:
+ *   1. If `poolAddress` is provided, use it directly (explicit override).
+ *   2. If `marketHints` is provided, scan it for an underlying match and
+ *      return the corresponding mToken without any RPC calls. Callers that
+ *      already fetched the SDK's `getMarkets()` list (CLI lend commands,
+ *      API `/prepare/*`) should pass it here — saves a round-trip to
+ *      Comptroller.getAllMarkets() plus an N-way `underlying()` multicall
+ *      on every signed call.
+ *   3. Fall back to on-chain resolution via Comptroller.
  */
 export async function resolveMToken(
   viemClient: PublicClient<Transport, Chain>,
   chainId: number,
   underlyingAddress: Address,
   poolAddress?: string,
+  marketHints?: readonly MarketHint[],
 ): Promise<Address> {
   // Explicit override
   if (poolAddress) {
@@ -23,6 +35,18 @@ export async function resolveMToken(
       throw usage("Invalid --pool-address (mToken address)");
     }
     return getAddress(poolAddress);
+  }
+
+  // Caller-supplied hints — short-circuit when possible.
+  if (marketHints?.length) {
+    const target = underlyingAddress.toLowerCase();
+    const hit = marketHints.find(
+      (h) => h.underlyingAddress.toLowerCase() === target,
+    );
+    if (hit) return getAddress(hit.mTokenAddress);
+    // Hints didn't include this underlying — fall through to on-chain
+    // (rare: SDK markets list and Comptroller.getAllMarkets() can drift
+    // around new listings before SDK release).
   }
 
   const contracts = getContracts(chainId);

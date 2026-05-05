@@ -33,13 +33,17 @@ function marketToJson(m: any): Record<string, unknown> {
 markets.get("/", async (c) => {
   let chainId = 0;
   try {
+    // Validate inputs before touching RPC — fail fast on bad params.
+    const limit = parsePositiveInt(c.req.query("limit"), "limit");
+    const sortKey = c.req.query("sort") ?? "tvl";
+    const asset = c.req.query("asset");
+
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
 
     const list = await sdkClient.getMarkets({ chainId: chain.chainId });
     let filtered = [...list];
 
-    const asset = c.req.query("asset");
     if (asset) {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
@@ -49,7 +53,6 @@ markets.get("/", async (c) => {
       );
     }
 
-    const sortKey = c.req.query("sort") ?? "tvl";
     filtered.sort((a: any, b: any) => {
       switch (sortKey) {
         case "supply-apy":
@@ -61,7 +64,6 @@ markets.get("/", async (c) => {
       }
     });
 
-    const limit = parsePositiveInt(c.req.query("limit"), "limit");
     if (limit !== undefined) {
       filtered = filtered.slice(0, limit);
     }

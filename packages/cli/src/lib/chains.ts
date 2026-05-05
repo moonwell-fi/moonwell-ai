@@ -1,5 +1,6 @@
 import { base, optimism } from "viem/chains";
 import type { Chain } from "viem";
+import { usage } from "./errors.js";
 
 export type NetworkName = "base" | "optimism";
 
@@ -47,7 +48,7 @@ export function resolveChain(input: string): ChainConfig {
   const key = input.toLowerCase().trim();
   const networkName = CHAIN_ALIASES[key];
   if (!networkName) {
-    throw new Error(
+    throw usage(
       `Unsupported chain: "${input}". Supported: base, optimism (or chain IDs 8453, 10)`,
     );
   }

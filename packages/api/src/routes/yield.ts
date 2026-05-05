@@ -11,13 +11,18 @@ const yieldRoute = new Hono<{ Bindings: Env }>();
 yieldRoute.get("/", async (c) => {
   let chainId = 0;
   try {
+    // Validate inputs before touching RPC — fail fast on bad params.
+    const limit = parsePositiveInt(c.req.query("limit"), "limit");
+    const minTvl = parseNonNegativeFloat(c.req.query("min-tvl"), "min-tvl");
+    const sortKey = c.req.query("sort") ?? "apy";
+    const asset = c.req.query("asset");
+
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
 
     const markets = await sdkClient.getMarkets({ chainId: chain.chainId });
     let filtered = [...markets];
 
-    const asset = c.req.query("asset");
     if (asset) {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
@@ -25,19 +30,16 @@ yieldRoute.get("/", async (c) => {
       );
     }
 
-    const minTvl = parseNonNegativeFloat(c.req.query("min-tvl"), "min-tvl");
     if (minTvl !== undefined) {
       filtered = filtered.filter((m: any) => m.totalSupplyUsd >= minTvl);
     }
 
-    const sortKey = c.req.query("sort") ?? "apy";
     filtered.sort((a: any, b: any) =>
       sortKey === "tvl"
         ? b.totalSupplyUsd - a.totalSupplyUsd
         : b.baseSupplyApy - a.baseSupplyApy,
     );
 
-    const limit = parsePositiveInt(c.req.query("limit"), "limit");
     if (limit !== undefined) {
       filtered = filtered.slice(0, limit);
     }
