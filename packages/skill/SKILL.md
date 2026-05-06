@@ -54,7 +54,7 @@ curl 'https://api.moonwell.fi/v1/token-balance/0xYourAddr?chain=base&asset=USDC'
 
 ### Prepare unsigned calldata
 
-POST with a JSON body (recommended):
+POST with a JSON body:
 
 ```bash
 curl -X POST 'https://api.moonwell.fi/v1/prepare/supply' \
@@ -62,13 +62,13 @@ curl -X POST 'https://api.moonwell.fi/v1/prepare/supply' \
   -d '{"chain":"base","asset":"USDC","amountDecimal":"100","from":"0xYourAddr"}'
 ```
 
-Or GET with query params (for harnesses that can't issue POSTs):
+Or GET with query params:
 
 ```bash
 curl 'https://api.moonwell.fi/v1/prepare/supply?chain=base&asset=USDC&amountDecimal=100&from=0xYourAddr'
 ```
 
-Both methods accept the same fields and return identical envelopes. `simulate` is sent as the literal string `true` or `false` in the GET form.
+Both accept the same fields and return identical envelopes — pick whichever your harness can speak. `simulate` is sent as the literal string `true` or `false` in the GET form.
 
 Verbs: `supply`, `withdraw`, `borrow`, `repay`. Body / query fields:
 
