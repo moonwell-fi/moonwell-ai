@@ -4,8 +4,8 @@ Agent skill and CLI for the [Moonwell](https://moonwell.fi) lending protocol on 
 
 ## Install the skill
 
-```
-/install-skill https://agents.moonwell.fi/skill.md
+```bash
+curl https://agents.moonwell.fi/skill.md
 ```
 
 ## Packages
