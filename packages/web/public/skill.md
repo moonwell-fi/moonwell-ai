@@ -26,7 +26,7 @@ Two ways to use this skill — both speak the same JSON envelope `{ success, dat
 
 ## Mode A — HTTP API
 
-Stateless. GET for reads, POST for unsigned calldata. You sign and broadcast yourself.
+Stateless. GET for reads. **POST or GET** for unsigned calldata — both shapes return identical envelopes; pick whichever your harness can speak. You sign and broadcast yourself.
 
 ### Reads
 
@@ -54,13 +54,23 @@ curl 'https://api.moonwell.fi/v1/token-balance/0xYourAddr?chain=base&asset=USDC'
 
 ### Prepare unsigned calldata
 
+POST with a JSON body (recommended):
+
 ```bash
 curl -X POST 'https://api.moonwell.fi/v1/prepare/supply' \
   -H 'content-type: application/json' \
   -d '{"chain":"base","asset":"USDC","amountDecimal":"100","from":"0xYourAddr"}'
 ```
 
-Verbs: `supply`, `withdraw`, `borrow`, `repay`. Body fields:
+Or GET with query params (for harnesses that can't issue POSTs):
+
+```bash
+curl 'https://api.moonwell.fi/v1/prepare/supply?chain=base&asset=USDC&amountDecimal=100&from=0xYourAddr'
+```
+
+Both methods accept the same fields and return identical envelopes. `simulate` is sent as the literal string `true` or `false` in the GET form.
+
+Verbs: `supply`, `withdraw`, `borrow`, `repay`. Body / query fields:
 
 | Field | Type | Notes |
 |---|---|---|
@@ -91,7 +101,7 @@ Sign and broadcast each in order. After step 1 confirms, the next step's gas may
 
 ### Caching
 
-Market reads (`/markets`, `/rates`, `/yield`) are edge-cached for 30s. User-scoped reads (`/positions`, `/health`, `/rewards`, `/token-balance`) are never cached. POST `/prepare/*` never caches.
+Market reads (`/markets`, `/rates`, `/yield`) are edge-cached for 30s. User-scoped reads (`/positions`, `/health`, `/rewards`, `/token-balance`) are never cached. Both `POST` and `GET /prepare/*` send `Cache-Control: private, no-store` and never cache.
 
 ---
 
