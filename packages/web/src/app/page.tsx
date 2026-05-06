@@ -3,9 +3,10 @@ import CopyButton from './components/CopyButton';
 import TerminalDemo from './components/TerminalDemo';
 import TerminalCard from './components/TerminalCard';
 import LunarTerrain from './components/LunarTerrainMount';
-import HealthArtifact from './components/HealthArtifact';
+import AgentBankingArtifact from './components/AgentBankingArtifact';
 import ExamplePrompts from './components/ExamplePrompts';
 import PromptCarousel from './components/PromptCarousel';
+import MoonwellLogo from './components/MoonwellLogo';
 
 const CAPABILITIES = [
   { category: "Read", items: [
@@ -17,7 +18,7 @@ const CAPABILITIES = [
     { name: "rewards", desc: "Pending WELL token rewards" },
     { name: "token-balance", desc: "ERC-20 token balances" },
   ]},
-  { category: "Write", items: [
+  { category: "Simulate", items: [
     { name: "supply", desc: "Prepare a deposit transaction" },
     { name: "withdraw", desc: "Prepare a withdrawal transaction" },
     { name: "borrow", desc: "Prepare a borrow transaction" },
@@ -31,7 +32,7 @@ const CAPABILITIES = [
 const STEPS = [
   { step: "01", title: "Install the skill", desc: "Point your agent (Claude Code, Cursor, Hermes) at the skill file." },
   { step: "02", title: "Prompt naturally", desc: "Ask about rates, supply tokens, manage positions in plain language." },
-  { step: "03", title: "Review & sign", desc: "Write commands return an unsigned plan with simulation and preview. Pipe to submit, or sign when ready." },
+  { step: "03", title: "Review & sign", desc: "Commands return an unsigned plan; pipe to submit or sign when ready." },
 ];
 
 function Eyebrow({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -73,10 +74,11 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <a
             href="#top"
-            aria-label="Moonwell agents — back to top"
-            className="font-mono text-sm font-medium hover:text-foreground transition-colors duration-150 focus-ring-link"
+            aria-label="Moonwell Agents — back to top"
+            className="inline-flex items-center gap-2 font-mono text-sm font-medium text-foreground transition-colors duration-150 focus-ring-link"
           >
-            <span className="text-accent">agents</span>.moonwell.fi
+            <MoonwellLogo />
+            <span>Moonwell <span className="text-accent">Agents</span></span>
           </a>
           <div className="flex items-center gap-4 sm:gap-6 text-sm text-muted">
             <a href="#capabilities" className="hover:text-foreground transition-colors duration-150 focus-ring-link">Capabilities</a>
@@ -90,16 +92,10 @@ export default function Home() {
       <section className="relative px-6 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
         <LunarTerrain />
         <div className="relative z-10 flex flex-col items-center">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.04em] text-center max-w-4xl leading-[1.02]">
-            Give your agent DeFi superpowers with{" "}
-            <span className="text-accent">Moonwell</span>.
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-[-0.04em] text-center max-w-5xl leading-[1.02]">
+            DeFi superpowers for agents.<br />
+            Powered by <span className="text-accent">Moonwell</span>.
           </h1>
-          <p className="mt-8 max-w-xl text-center text-lg leading-relaxed text-muted">
-            A CLI and skill that lets any AI agent read Moonwell markets and prepare unsigned transactions. Simulated. Previewed. You sign.
-          </p>
-          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.2em] text-muted/70">
-            Base · Optimism · no keys required
-          </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full max-w-sm sm:w-auto sm:max-w-none">
             <CopySkillButton />
@@ -139,13 +135,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Your risk */}
+      {/* Agentic banking */}
       <section className="max-w-3xl mx-auto px-6 py-24 w-full">
-        <Eyebrow className="mb-6">Your risk</Eyebrow>
+        <Eyebrow className="mb-6">Agentic banking</Eyebrow>
         <p className="text-muted text-[15px] leading-relaxed mb-6 max-w-xl">
-          Check account health before any write. Tiered thresholds signal distance from liquidation.
+          Your agent reads the position, prepares a borrow, and confirms the simulation.
         </p>
-        <HealthArtifact />
+        <AgentBankingArtifact />
       </section>
 
       {/* Capabilities */}
@@ -185,14 +181,14 @@ export default function Home() {
               <InstallSnippet
                 prefix="❯"
                 prefixColor="accent"
-                copyText="curl https://agents.moonwell.fi/skill.md"
+                copyText="https://agents.moonwell.fi/skill.md"
               >
                 <span className="text-foreground">curl</span>
                 <span className="text-accent"> https://agents.moonwell.fi/skill.md</span>
               </InstallSnippet>
             </div>
 
-            <div>
+            {/* <div>
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3">Or install the CLI</h3>
               <InstallSnippet
                 prefix="$"
@@ -201,12 +197,12 @@ export default function Home() {
               >
                 <span className="text-foreground">npm install @moonwell-fi/cli</span>
               </InstallSnippet>
-            </div>
+            </div> */}
 
             <div className="pt-2 mt-2 border-t border-border/40">
               <h3 className="font-mono text-[11px] font-medium text-muted uppercase tracking-[0.2em] mb-3 mt-4">
                 <span className="select-none" aria-hidden="true">↳ </span>
-                Then prompt your agent
+                Then prompt
               </h3>
               <PromptCarousel />
             </div>

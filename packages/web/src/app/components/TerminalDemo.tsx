@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 import { RotateCw } from 'lucide-react';
 import {
@@ -12,6 +12,8 @@ import {
   type OutputRow,
   type Script,
 } from '../lib/scripts';
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 type Phase = 'idle' | 'typing' | 'morphing' | 'scanning' | 'results' | 'complete';
 
@@ -108,6 +110,7 @@ export default function TerminalDemo() {
   const startedRef = useRef(false);
   const lastHRef = useRef(MIN_HEIGHT);
   const readyDispatchedRef = useRef(false);
+  const measureRef = useRef<HTMLDivElement>(null);
 
   const [script, setScript] = useState<Script>(SCRIPTS.yield);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -170,6 +173,29 @@ export default function TerminalDemo() {
     };
     typeNext();
   }, [reduceMotion]);
+
+  // Pre-measure the tallest script's final-state height so the terminal reserves
+  // that height from first paint. Without this, the spring ratchets up visibly
+  // when the user switches from a short script (e.g. health) to a longer one
+  // (e.g. supply or rates).
+  useIsomorphicLayoutEffect(() => {
+    const root = rootRef.current;
+    const measure = measureRef.current;
+    if (!root || !measure) return;
+
+    measure.style.width = `${root.clientWidth}px`;
+
+    let max = MIN_HEIGHT;
+    for (const child of Array.from(measure.children) as HTMLElement[]) {
+      const h = child.getBoundingClientRect().height;
+      if (h > max) max = h;
+    }
+
+    if (max > lastHRef.current) {
+      lastHRef.current = max;
+      heightTarget.jump(max);
+    }
+  }, [heightTarget]);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -238,6 +264,40 @@ export default function TerminalDemo() {
   }, [phase]);
 
   return (
+    <>
+    <div
+      ref={measureRef}
+      aria-hidden="true"
+      className="font-mono text-sm"
+      style={{
+        position: 'fixed',
+        top: '-10000px',
+        left: 0,
+        visibility: 'hidden',
+        pointerEvents: 'none',
+      }}
+    >
+      {Object.values(SCRIPTS).map((s) => (
+        <div key={s.id} className="px-5 py-4 space-y-1">
+          <div className="leading-6 pl-[2ch] -indent-[2ch]">
+            <span className="text-accent select-none">❯ </span>
+            <span className="text-foreground">{s.prompt}</span>
+          </div>
+          <div className="text-muted pl-4">
+            <span className="select-none">↳ </span>
+            {s.scanLine}
+            <span className="select-none">&hellip;</span>
+          </div>
+          <div className="pt-1 space-y-0.5">
+            {s.rows.map((r, idx) => <RowRenderer key={idx} row={r} />)}
+          </div>
+          <div className="pt-1">
+            <span className="text-accent select-none">❯ </span>
+          </div>
+        </div>
+      ))}
+    </div>
+
     <motion.div
       ref={rootRef}
       onMouseEnter={() => setHovering(true)}
@@ -348,6 +408,7 @@ export default function TerminalDemo() {
         )}
       </AnimatePresence>
     </motion.div>
+    </>
   );
 }
 
