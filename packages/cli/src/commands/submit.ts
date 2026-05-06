@@ -24,6 +24,24 @@ interface SubmitOptions extends GlobalOptions {
   actionFile?: string;
 }
 
+// Reward-hooked Moonwell ops consume more gas than a cold RPC's estimateGas
+// reports (reward indices warm during execution). Apply a 25% buffer plus
+// per-step floors derived from observed Base mainnet costs to prevent OOG.
+const STEP_GAS_FLOORS: Record<string, bigint> = {
+  approve: 100_000n,
+  "enter-market": 200_000n,
+  "moonwell-supply": 350_000n,
+  "moonwell-withdraw": 500_000n,
+  "moonwell-borrow": 800_000n,
+  "moonwell-repay": 350_000n,
+};
+
+function applyGasPolicy(rawGas: bigint, step: string, isEstimate: boolean): bigint {
+  const buffered = isEstimate ? (rawGas * 125n) / 100n : rawGas;
+  const floor = STEP_GAS_FLOORS[step] ?? 0n;
+  return buffered > floor ? buffered : floor;
+}
+
 export function registerSubmit(program: Command): void {
   program
     .command("submit")
@@ -104,13 +122,13 @@ export function registerSubmit(program: Command): void {
           let gas: bigint;
           let gasEstimated = true;
           try {
-            gas = await publicClient.estimateGas({
+            const estimate = await publicClient.estimateGas({
               account: signerAddress,
               to: tx.to,
               data: tx.data,
               value: BigInt(tx.value),
             });
-            gas = gas + (gas / 10n); // 10% buffer
+            gas = applyGasPolicy(estimate, tx.step, true);
           } catch (estimateErr) {
             if (idx === 0) {
               // Step 1 failing means the tx itself is invalid
@@ -120,7 +138,7 @@ export function registerSubmit(program: Command): void {
             const prevGas = results[idx - 1]
               ? BigInt(results[idx - 1].gasUsed)
               : 300_000n;
-            gas = prevGas * 2n;
+            gas = applyGasPolicy(prevGas * 2n, tx.step, false);
             gasEstimated = false;
             if (spinner) spinner.text = `Step ${idx + 1}: gas estimation failed (stale RPC state), using fallback ${gas}...`;
           }

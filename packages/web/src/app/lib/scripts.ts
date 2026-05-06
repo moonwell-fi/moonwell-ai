@@ -22,7 +22,7 @@ export type Script = {
 export const SCRIPTS: Record<ScriptId, Script> = {
   yield: {
     id: 'yield',
-    prompt: 'What are the best yield opportunities on Moonwell right now?',
+    prompt: 'What are the best yield opportunities?',
     command: 'moonwell yield --sort apy --limit 3 --chain base',
     scanLine: 'Fetching yield opportunities',
     rows: [
@@ -39,7 +39,7 @@ export const SCRIPTS: Record<ScriptId, Script> = {
   },
   supply: {
     id: 'supply',
-    prompt: 'Supply 100 USDC to Moonwell on Base',
+    prompt: 'Supply 100 USDC on Base',
     command: 'moonwell supply --asset USDC --amount-decimal 100 --from 0x... --chain base',
     scanLine: 'Preparing supply',
     rows: [
@@ -77,7 +77,7 @@ export const SCRIPTS: Record<ScriptId, Script> = {
   },
   health: {
     id: 'health',
-    prompt: 'Check my health factor on Moonwell',
+    prompt: 'Check my health factor',
     command: 'moonwell health --address 0x... --chain base',
     scanLine: 'Checking account health',
     rows: [

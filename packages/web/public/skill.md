@@ -16,7 +16,7 @@ Two ways to use this skill — both speak the same JSON envelope `{ success, dat
 | Mode | Best for | Install |
 |---|---|---|
 | **A — HTTP API** at `https://api.moonwell.fi/v1/` | Agent harnesses that can't install npm packages | None — just `curl`/`fetch` |
-| **B — CLI** (`@moonwell-fi/cli`) | Full control, multi-step orchestration, local signing | `npm install -g @moonwell-fi/cli` |
+| **B — CLI** (`@moonwell-fi/cli`) | Full control, multi-step orchestration, local signing | Launching soon — `npm install -g @moonwell-fi/cli` |
 
 **Supported chains:** Base (8453), Optimism (10).
 
@@ -49,6 +49,8 @@ curl 'https://api.moonwell.fi/v1/health/0xYourAddr?chain=base'
 curl 'https://api.moonwell.fi/v1/rewards/0xYourAddr?chain=base'
 curl 'https://api.moonwell.fi/v1/token-balance/0xYourAddr?chain=base&asset=USDC'
 ```
+
+`positions` returns `data` as an array of per-market entries — `{ market, marketAddress, suppliedUsd, borrowedUsd, collateralUsd, collateralEnabled }` — not a summary object. Aggregate across the array for totals. **Base has two `mUSDC` entries** (the current market plus the deprecated bridged-USDC market) sharing the same `market` label; disambiguate by `marketAddress` when it matters.
 
 ### Prepare unsigned calldata
 
@@ -83,7 +85,9 @@ The response's `data.transactions[]` is an ordered array of unsigned txs:
 }
 ```
 
-Sign and broadcast each in order. After step 1 confirms, the next step's gas may need a manual cap (public RPCs can serve stale state — this is documented in `simulation.skippedSteps`).
+`step` values: `approve`, `enter-market`, `moonwell-supply`, `moonwell-withdraw`, `moonwell-borrow`, `moonwell-repay`.
+
+Sign and broadcast each in order. After step 1 confirms, the next step's gas may need a manual cap (public RPCs can serve stale state — see `simulation.skippedSteps`). **Note:** `simulation.success: true` only means gas estimation did not revert — Compound v2 functions return non-zero error codes for business-logic failures without reverting (see [Compound v2 error codes](#compound-v2-error-codes) below), so always check on-chain receipts after broadcast.
 
 ### Caching
 
@@ -92,6 +96,8 @@ Market reads (`/markets`, `/rates`, `/yield`) are edge-cached for 30s. User-scop
 ---
 
 ## Mode B — CLI
+
+> **Status:** Launching soon. `@moonwell-fi/cli` is not yet published to npm — use Mode A (HTTP API) until it ships.
 
 Install:
 
@@ -224,5 +230,5 @@ Public RPCs serve stale state. Multi-step prepares simulate only step 1 (later s
 - CLI source: <https://github.com/moonwell-fi/moonwell-ai/tree/main/packages/cli>
 - Moonwell SDK: <https://sdk.moonwell.fi> (TypeScript SDK underneath both modes)
 - SDK LLM reference: <https://sdk.moonwell.fi/llms-full.txt>
-- Safety patterns: [references/safety-patterns.md](references/safety-patterns.md)
-- Contract addresses: [references/contract-reference.md](references/contract-reference.md)
+- Safety patterns: <https://raw.githubusercontent.com/moonwell-fi/moonwell-ai/main/packages/skill/references/safety-patterns.md>
+- Contract addresses: <https://raw.githubusercontent.com/moonwell-fi/moonwell-ai/main/packages/skill/references/contract-reference.md>
