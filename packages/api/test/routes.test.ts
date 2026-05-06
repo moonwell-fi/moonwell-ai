@@ -137,6 +137,64 @@ describe("/v1/prepare/:verb", () => {
   });
 });
 
+describe("GET /v1/prepare/:verb (query-param mode)", () => {
+  it("rejects empty query with 400 (same body validator as POST)", async () => {
+    const res = await app.request("/v1/prepare/supply", undefined, ENV);
+    expect(res.status).toBe(400);
+    const body = await asJson(res);
+    expect(body.error).toContain("`chain` is required");
+  });
+
+  it("rejects unknown verb with 400", async () => {
+    const res = await app.request(
+      "/v1/prepare/yolo?chain=base&asset=USDC&amountDecimal=1&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson(res);
+    expect(body.error).toContain('Unknown verb "yolo"');
+  });
+
+  it("rejects bad from address with 400", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?chain=base&asset=USDC&amountDecimal=1&from=not-a-hex",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson(res);
+    expect(body.error).toContain("`from` must be a valid");
+  });
+
+  it("rejects missing amount with 400", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?chain=base&asset=USDC&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson(res);
+    expect(body.error).toMatch(/Provide `amount`/);
+  });
+
+  it("rejects invalid simulate value with 400", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?chain=base&asset=USDC&amountDecimal=1&from=0x000000000000000000000000000000000000dEaD&simulate=maybe",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson(res);
+    expect(body.error).toContain("Invalid simulate");
+  });
+
+  it("response is no-store (never cached)", async () => {
+    const res = await app.request("/v1/prepare/supply", undefined, ENV);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+  });
+});
+
 describe("404 + envelope shape", () => {
   it("unknown path returns 404 with hint", async () => {
     const res = await app.request("/v1/does-not-exist", undefined, ENV);
