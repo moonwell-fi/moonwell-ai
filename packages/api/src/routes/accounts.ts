@@ -7,7 +7,7 @@ const accounts = new Hono<{ Bindings: Env }>();
 
 /** GET /v1/positions/:address?chain=…[&asset=…] */
 accounts.get("/positions/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
@@ -47,7 +47,7 @@ accounts.get("/positions/:address", async (c) => {
 
 /** GET /v1/health/:address?chain=… */
 accounts.get("/health/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
@@ -85,7 +85,7 @@ accounts.get("/health/:address", async (c) => {
 
 /** GET /v1/rewards/:address?chain=… */
 accounts.get("/rewards/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
@@ -114,7 +114,7 @@ accounts.get("/rewards/:address", async (c) => {
 
 /** GET /v1/token-balance/:address?chain=…[&asset=…] */
 accounts.get("/token-balance/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;

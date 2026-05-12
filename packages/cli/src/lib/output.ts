@@ -11,11 +11,12 @@ export function isJsonMode(jsonFlag?: boolean): boolean {
 }
 
 /**
- * Build a JSON envelope.
+ * Build a JSON envelope. `chainId` may be `null` (or `0`) when the envelope
+ * fires before chain resolution; in that case `meta.chain` is `null`.
  */
 export function envelope<T>(
   command: string,
-  chainId: number,
+  chainId: number | null,
   data: T,
 ): Envelope<T> {
   return {
@@ -23,7 +24,7 @@ export function envelope<T>(
     data,
     meta: {
       command,
-      chain: caip2(chainId),
+      chain: chainId && chainId > 0 ? caip2(chainId) : null,
       timestamp: new Date().toISOString(),
     },
   };
@@ -34,7 +35,7 @@ export function envelope<T>(
  */
 export function errorEnvelope(
   command: string,
-  chainId: number,
+  chainId: number | null,
   error: string,
 ): Envelope<null> {
   return {
@@ -42,7 +43,7 @@ export function errorEnvelope(
     data: null,
     meta: {
       command,
-      chain: caip2(chainId),
+      chain: chainId && chainId > 0 ? caip2(chainId) : null,
       timestamp: new Date().toISOString(),
     },
     error,
@@ -68,7 +69,7 @@ export function printError(message: string): void {
  */
 export function handleError(
   command: string,
-  chainId: number,
+  chainId: number | null,
   err: unknown,
   json: boolean,
 ): void {

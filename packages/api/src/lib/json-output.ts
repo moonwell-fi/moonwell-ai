@@ -4,10 +4,14 @@ import { caip2 } from "./chains.js";
 /**
  * Build a JSON envelope. Matches the CLI's `envelope()` shape so callers can
  * use the same parser whether they hit the API or pipe CLI output.
+ *
+ * `chainId` may be `null` (or `0`) for envelopes that fire before chain
+ * resolution — e.g. validation errors. In that case `meta.chain` is `null`
+ * rather than the misleading `"eip155:0"`.
  */
 export function envelope<T>(
   command: string,
-  chainId: number,
+  chainId: number | null,
   data: T,
 ): Envelope<T> {
   return {
@@ -15,7 +19,7 @@ export function envelope<T>(
     data,
     meta: {
       command,
-      chain: caip2(chainId),
+      chain: chainId && chainId > 0 ? caip2(chainId) : null,
       timestamp: new Date().toISOString(),
     },
   };
@@ -24,7 +28,7 @@ export function envelope<T>(
 /** Build an error envelope. */
 export function errorEnvelope(
   command: string,
-  chainId: number,
+  chainId: number | null,
   error: string,
 ): Envelope<null> {
   return {
@@ -32,7 +36,7 @@ export function errorEnvelope(
     data: null,
     meta: {
       command,
-      chain: caip2(chainId),
+      chain: chainId && chainId > 0 ? caip2(chainId) : null,
       timestamp: new Date().toISOString(),
     },
     error,

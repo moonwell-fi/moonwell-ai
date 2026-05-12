@@ -214,6 +214,13 @@ describe("404 + envelope shape", () => {
     const res = await app.request("/v1/markets?limit=abc", undefined, ENV);
     expect(res.headers.get("content-type")).toContain("application/json");
   });
+
+  it("meta.chain is null when chain never resolves", async () => {
+    const res = await app.request("/v1/markets?limit=abc", undefined, ENV);
+    expect(res.status).toBe(400);
+    const body = await asJson<{ meta: { chain: string | null } }>(res);
+    expect(body.meta.chain).toBeNull();
+  });
 });
 
 describe("CORS", () => {

@@ -14,7 +14,7 @@ function utilization(m: Pick<Market, "totalSupplyUsd" | "totalBorrowsUsd">): num
 
 /** GET /v1/rates?chain=…[&asset=…] */
 rates.get("/", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;

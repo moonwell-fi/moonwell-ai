@@ -33,7 +33,7 @@ function marketToJson(m: Market): Record<string, unknown> {
 
 /** GET /v1/markets?chain=…[&asset=…&sort=…&limit=…] */
 markets.get("/", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     // Validate inputs before touching RPC — fail fast on bad params.
     const limit = parsePositiveInt(c.req.query("limit"), "limit");
@@ -80,7 +80,7 @@ markets.get("/", async (c) => {
 
 /** GET /v1/markets/:id?chain=…  (id = symbol or mToken/underlying address) */
 markets.get("/:id", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;

@@ -10,7 +10,7 @@ const yieldRoute = new Hono<{ Bindings: Env }>();
 
 /** GET /v1/yield?chain=…[&asset=…&min-tvl=…&sort=apy|tvl&limit=…] */
 yieldRoute.get("/", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     // Validate inputs before touching RPC — fail fast on bad params.
     const limit = parsePositiveInt(c.req.query("limit"), "limit");

@@ -7,7 +7,11 @@ export interface Envelope<T> {
   data: T;
   meta: {
     command: string;
-    chain: string;
+    /**
+     * CAIP-2 chain ID (e.g. "eip155:8453") when chain context is resolved.
+     * `null` when the envelope fires before chain resolution (validation errors).
+     */
+    chain: string | null;
     timestamp: string;
   };
   error?: string;

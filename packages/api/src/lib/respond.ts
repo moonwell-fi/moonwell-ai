@@ -13,7 +13,7 @@ interface OkOpts {
 export function ok<T>(
   c: Context,
   command: string,
-  chainId: number,
+  chainId: number | null,
   data: T,
   opts: OkOpts = {},
 ) {
@@ -30,7 +30,7 @@ export function ok<T>(
 export function fail(
   c: Context,
   command: string,
-  chainId: number,
+  chainId: number | null,
   err: unknown,
 ) {
   const status = statusFor(err);
