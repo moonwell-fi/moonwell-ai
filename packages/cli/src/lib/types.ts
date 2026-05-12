@@ -26,7 +26,8 @@ export interface UnsignedTx {
   description: string;
   to: Address;
   data: `0x${string}`;
-  value: string;
+  /** 0x-prefixed hex, EIP-5792 / JSON-RPC convention. e.g. "0x0" or "0x16345785d8a0000". */
+  value: `0x${string}`;
   chainId: number;
 }
 

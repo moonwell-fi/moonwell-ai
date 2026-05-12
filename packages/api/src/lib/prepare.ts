@@ -84,7 +84,7 @@ export async function prepareLendAction(
           functionName: "mint",
           args: [amount],
         }),
-        value: "0",
+        value: "0x0",
         chainId,
       });
 
@@ -109,7 +109,7 @@ export async function prepareLendAction(
           functionName: "redeemUnderlying",
           args: [amount],
         }),
-        value: "0",
+        value: "0x0",
         chainId,
       });
 
@@ -137,7 +137,7 @@ export async function prepareLendAction(
           functionName: "borrow",
           args: [amount],
         }),
-        value: "0",
+        value: "0x0",
         chainId,
       });
 
@@ -178,7 +178,7 @@ export async function prepareLendAction(
           functionName: "repayBorrow",
           args: [amount],
         }),
-        value: "0",
+        value: "0x0",
         chainId,
       });
 
@@ -245,7 +245,7 @@ async function appendApprovalIfNeeded(
         functionName: "approve",
         args: [spender, amount],
       }),
-      value: "0",
+      value: "0x0",
       chainId,
     });
   }
@@ -277,7 +277,7 @@ async function appendEnterMarketsIfNeeded(
         functionName: "enterMarkets",
         args: [[mToken]],
       }),
-      value: "0",
+      value: "0x0",
       chainId,
     });
   }
