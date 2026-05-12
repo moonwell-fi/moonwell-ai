@@ -32,10 +32,22 @@ export interface UnsignedTx {
 }
 
 export interface SimulationResult {
-  success: boolean;
+  /** True iff eth_estimateGas on the first transaction did not revert. */
+  gasEstimateSucceeded: boolean;
+  /** Gas estimate (decimal string) when gasEstimateSucceeded === true. */
   gasEstimate?: string;
+  /** Sanitized revert reason or RPC error when gasEstimateSucceeded === false. */
   error?: string;
+  /**
+   * Steps not simulated. Multi-step prepares only simulate step 1; later
+   * steps depend on prior on-chain state.
+   */
   skippedSteps?: string[];
+  /**
+   * Human-readable note explaining what simulation does and does not prove
+   * — see SKILL.md for full caveats around Compound v2 error codes.
+   */
+  note?: string;
 }
 
 export interface PrepareResult {

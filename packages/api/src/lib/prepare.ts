@@ -290,6 +290,19 @@ async function appendEnterMarketsIfNeeded(
   }
 }
 
+/**
+ * Reduce a multi-line viem / RPC error message to its first short line
+ * with URLs scrubbed. Prevents leaking RPC endpoints, viem version strings,
+ * stack traces, or contract call internals to API clients.
+ */
+function sanitizeRpcError(message: string): string {
+  const firstLine = message.split("\n")[0].trim();
+  return firstLine.replace(/https?:\/\/\S+/g, "<rpc-url>");
+}
+
+const SIMULATION_NOTE =
+  "gasEstimateSucceeded only asserts that eth_estimateGas did not revert on step 1. Compound v2 functions can fail business-logic checks without reverting; always check on-chain receipts after broadcast.";
+
 async function simulateTransactions(
   viemClient: PublicClient<Transport, Chain>,
   transactions: UnsignedTx[],
@@ -299,7 +312,7 @@ async function simulateTransactions(
   // on-chain (e.g., mint depends on approve), so independent simulation
   // would always fail and produce misleading results.
   if (transactions.length === 0) {
-    return { success: true, gasEstimate: "0" };
+    return { gasEstimateSucceeded: true, gasEstimate: "0", note: SIMULATION_NOTE };
   }
 
   const first = transactions[0];
@@ -310,20 +323,23 @@ async function simulateTransactions(
       account: from,
       to: first.to,
       data: first.data,
+      // BigInt("0x…") parses hex; matches UnsignedTx.value's EIP-5792 format.
       value: BigInt(first.value),
     });
     return {
-      success: true,
+      gasEstimateSucceeded: true,
       gasEstimate: gas.toString(),
       skippedSteps: skippedSteps.length > 0 ? skippedSteps : undefined,
+      note: SIMULATION_NOTE,
     };
   } catch (err) {
-    const message =
+    const raw =
       err instanceof Error ? err.message : "Unknown simulation error";
     return {
-      success: false,
-      error: `Simulation failed on step "${first.step}": ${message}`,
+      gasEstimateSucceeded: false,
+      error: `Simulation failed on step "${first.step}": ${sanitizeRpcError(raw)}`,
       skippedSteps: skippedSteps.length > 0 ? skippedSteps : undefined,
+      note: SIMULATION_NOTE,
     };
   }
 }

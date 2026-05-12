@@ -36,7 +36,12 @@ function mockViemClient(opts: {
       throw new Error(`unexpected readContract: ${functionName}`);
     },
     estimateGas: async () => {
-      if (opts.estimateGasShouldThrow) throw new Error("revert: mock");
+      if (opts.estimateGasShouldThrow) {
+        // Mimic viem's error shape: includes RPC URL + multi-line stack.
+        throw new Error(
+          "HTTP request failed.\n\nURL: https://invalid-rpc.test/\nRequest body: {}\nVersion: viem@2.47.12",
+        );
+      }
       return opts.gas ?? 200_000n;
     },
   } as unknown as PublicClient<Transport, Chain>;
@@ -45,6 +50,56 @@ function mockViemClient(opts: {
 const USDC: Address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const M_USDC: Address = "0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22";
 const DEAD: Address = "0x000000000000000000000000000000000000dEaD";
+
+describe("SimulationResult shape", () => {
+  it("uses gasEstimateSucceeded (not legacy `success`)", async () => {
+    const viemClient = mockViemClient({
+      allowance: 2n ** 256n - 1n,
+      isMember: true,
+      gas: 200_000n,
+    });
+    const result = await prepareLendAction({
+      verb: "supply",
+      chainId: 8453,
+      asset: "USDC",
+      assetAddress: USDC,
+      assetDecimals: 6,
+      amount: 1_000_000n,
+      amountDecimal: "1",
+      from: DEAD,
+      mToken: M_USDC,
+      viemClient,
+      simulate: true,
+    });
+    expect(result.simulation).toBeDefined();
+    expect(result.simulation).toHaveProperty("gasEstimateSucceeded", true);
+    expect(result.simulation).not.toHaveProperty("success");
+    expect(result.simulation?.note).toMatch(/Compound v2|business-logic/i);
+  });
+
+  it("sanitizes viem URLs out of simulation.error on failure", async () => {
+    const viemClient = mockViemClient({
+      allowance: 2n ** 256n - 1n,
+      isMember: true,
+      estimateGasShouldThrow: true,
+    });
+    const result = await prepareLendAction({
+      verb: "supply",
+      chainId: 8453,
+      asset: "USDC",
+      assetAddress: USDC,
+      assetDecimals: 6,
+      amount: 1_000_000n,
+      amountDecimal: "1",
+      from: DEAD,
+      mToken: M_USDC,
+      viemClient,
+      simulate: true,
+    });
+    expect(result.simulation?.gasEstimateSucceeded).toBe(false);
+    expect(result.simulation?.error ?? "").not.toMatch(/https?:\/\//);
+  });
+});
 
 describe("UnsignedTx.value formatting (EIP-5792)", () => {
   it("all transactions emit 0x-prefixed hex `value`", async () => {

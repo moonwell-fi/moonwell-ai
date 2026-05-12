@@ -174,17 +174,17 @@ function printPrepareResultPretty(result: PrepareResult, chainName: string): voi
 
   if (result.simulation) {
     console.log("");
-    if (result.simulation.success) {
+    if (result.simulation.gasEstimateSucceeded) {
       console.log(
         labelValue(
-          "Simulation",
-          c.positive(`Passed (gas: ${result.simulation.gasEstimate})`),
+          "Gas estimate",
+          c.positive(`Passed (${result.simulation.gasEstimate})`),
         ),
       );
     } else {
       console.log(
         labelValue(
-          "Simulation",
+          "Gas estimate",
           c.negative(`Failed: ${result.simulation.error}`),
         ),
       );
