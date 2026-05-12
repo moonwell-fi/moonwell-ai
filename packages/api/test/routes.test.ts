@@ -14,10 +14,15 @@ async function asJson<T = Record<string, unknown>>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
+// 127.0.0.1:1 — connection refused fails in milliseconds on every OS.
+// Avoids DNS-based test timeouts that we saw with `invalid-rpc.test`:
+// some self-hosted CI runners hang on NXDOMAIN lookups long enough to
+// exceed vitest's 30s default. Tests that pass validation and then hit
+// the SDK still get a fast, deterministic upstream error.
 const ENV: Env = {
   ENVIRONMENT: "production",
-  BASE_RPC_URL: "https://invalid-rpc.test",
-  OPTIMISM_RPC_URL: "https://invalid-rpc.test",
+  BASE_RPC_URL: "http://127.0.0.1:1",
+  OPTIMISM_RPC_URL: "http://127.0.0.1:1",
 };
 
 const ENV_NO_RPC: Env = {
