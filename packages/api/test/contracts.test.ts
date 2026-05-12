@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   isDeprecatedMarket,
   getWethAddress,
+  WETH_ADDRESSES,
+  DEPRECATED_MARKETS,
   ZERO_ADDRESS,
 } from "../src/lib/contracts.js";
+import { SUPPORTED_CHAIN_IDS } from "../src/lib/chains.js";
 
 describe("isDeprecatedMarket", () => {
   it("flags Base mUSDbC as deprecated", () => {
@@ -52,4 +55,27 @@ describe("ZERO_ADDRESS", () => {
   it("is the canonical 0x000…0 form", () => {
     expect(ZERO_ADDRESS).toBe("0x0000000000000000000000000000000000000000");
   });
+});
+
+describe("per-chain lookup table parity", () => {
+  // Guards against the failure mode: adding a chain to chains.ts without
+  // updating WETH_ADDRESSES / DEPRECATED_MARKETS, which would 500 the
+  // first time an agent hit /prepare/supply?asset=ETH.
+
+  it.each([...SUPPORTED_CHAIN_IDS])(
+    "WETH_ADDRESSES has an entry for chain %i",
+    (chainId) => {
+      expect(WETH_ADDRESSES[chainId]).toBeDefined();
+      expect(WETH_ADDRESSES[chainId]).toMatch(/^0x[a-fA-F0-9]{40}$/);
+    },
+  );
+
+  it.each([...SUPPORTED_CHAIN_IDS])(
+    "DEPRECATED_MARKETS has an entry for chain %i (empty set is fine)",
+    (chainId) => {
+      // Undefined would mean a typo in the table; an empty set is valid
+      // (no deprecated markets on this chain yet).
+      expect(DEPRECATED_MARKETS[chainId]).toBeInstanceOf(Set);
+    },
+  );
 });

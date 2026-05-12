@@ -1,4 +1,5 @@
 import type { Address } from "viem";
+import { MoonwellError } from "./errors.js";
 
 export interface ChainContracts {
   comptroller: Address;
@@ -45,7 +46,13 @@ export const WETH_ADDRESSES: Record<number, Address> = {
 export function getWethAddress(chainId: number): Address {
   const addr = WETH_ADDRESSES[chainId];
   if (!addr) {
-    throw new Error(`No WETH address known for chain ${chainId}`);
+    // INTERNAL → HTTP 500 via fail(). Indicates a server-config bug (a chain
+    // was added to SUPPORTED_CHAINS without a matching WETH entry). Routes
+    // through the same logging path as other internal errors.
+    throw new MoonwellError(
+      "INTERNAL",
+      `No WETH address known for chain ${chainId}`,
+    );
   }
   return addr;
 }
