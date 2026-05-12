@@ -80,6 +80,38 @@ describe("validation — bad query params 400, no RPC needed", () => {
   });
 });
 
+describe("/v1/prepare/:verb — chain default", () => {
+  it("doesn't reject when `chain` is omitted (defaults to base downstream)", async () => {
+    // The validator must not throw on missing chain. The SDK call may still
+    // fail with the bogus RPC URL, but the error must NOT be "chain is required".
+    const res = await app.request(
+      "/v1/prepare/supply",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          asset: "USDC",
+          amountDecimal: "1",
+          from: "0x000000000000000000000000000000000000dEaD",
+        }),
+      },
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    expect(body.error ?? "").not.toContain("`chain` is required");
+  });
+
+  it("doesn't reject GET when `chain` is omitted from query", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?asset=USDC&amountDecimal=1&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    expect(body.error ?? "").not.toContain("`chain` is required");
+  });
+});
+
 describe("/v1/prepare/:verb", () => {
   it("rejects empty body with 400", async () => {
     const res = await app.request(
