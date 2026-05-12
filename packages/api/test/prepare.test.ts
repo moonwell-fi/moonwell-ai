@@ -14,14 +14,14 @@ describe("prepare body validation", () => {
     expect(parsed.amountDecimal).toBe("100");
   });
 
-  it("rejects missing chain", () => {
-    expect(() =>
-      parsePrepareBody({
-        asset: "USDC",
-        amountDecimal: "1",
-        from: "0x000000000000000000000000000000000000dEaD",
-      }),
-    ).toThrow("`chain` is required");
+  it("accepts a body without chain (defaults to base downstream)", () => {
+    const parsed = parsePrepareBody({
+      asset: "USDC",
+      amountDecimal: "1",
+      from: "0x000000000000000000000000000000000000dEaD",
+    });
+    expect(parsed.chain).toBeUndefined();
+    expect(parsed.asset).toBe("USDC");
   });
 
   it("rejects bad from address", () => {
@@ -35,6 +35,16 @@ describe("prepare body validation", () => {
     ).toThrow("`from` must be a valid 0x-prefixed Ethereum address");
   });
 
+  it("rejects missing asset", () => {
+    expect(() =>
+      parsePrepareBody({
+        chain: "base",
+        amountDecimal: "1",
+        from: "0x000000000000000000000000000000000000dEaD",
+      }),
+    ).toThrow("`asset` is required");
+  });
+
   it("rejects missing amount", () => {
     expect(() =>
       parsePrepareBody({
@@ -43,6 +53,93 @@ describe("prepare body validation", () => {
         from: "0x000000000000000000000000000000000000dEaD",
       }),
     ).toThrow(/Provide `amount`/);
+  });
+});
+
+describe("prepare body validation — hardened inputs", () => {
+  const valid = {
+    chain: "base",
+    asset: "USDC",
+    from: "0x000000000000000000000000000000000000dEaD",
+  };
+
+  it("rejects amountDecimal as a JSON number", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amountDecimal: 0.1 }),
+    ).toThrow(/amountDecimal.*string/i);
+  });
+
+  it("rejects scientific notation in amountDecimal", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amountDecimal: "1e3" }),
+    ).toThrow(/amountDecimal/);
+  });
+
+  it("rejects negative amountDecimal", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amountDecimal: "-1" }),
+    ).toThrow(/amountDecimal/);
+  });
+
+  it("rejects amountDecimal with a leading dot", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amountDecimal: ".5" }),
+    ).toThrow(/amountDecimal/);
+  });
+
+  it("rejects non-string amount", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amount: 1000 as unknown as string }),
+    ).toThrow(/amount.*string/i);
+  });
+
+  it("rejects amount with a decimal point", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amount: "1.5" }),
+    ).toThrow(/amount/);
+  });
+
+  it("rejects amount with leading whitespace", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amount: " 100" }),
+    ).toThrow(/amount/);
+  });
+
+  it("rejects negative amount", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amount: "-100" }),
+    ).toThrow(/amount/);
+  });
+
+  it("rejects amount with leading zero (other than just '0')", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amount: "0100" }),
+    ).toThrow(/amount/);
+  });
+
+  it("accepts '0' as a valid amount string", () => {
+    const parsed = parsePrepareBody({ ...valid, amount: "0" });
+    expect(parsed.amount).toBe("0");
+  });
+
+  it("rejects both amount and amountDecimal together", () => {
+    expect(() =>
+      parsePrepareBody({
+        ...valid,
+        amount: "1000000",
+        amountDecimal: "1",
+      }),
+    ).toThrow(/either.*amount.*amountDecimal|both/i);
+  });
+
+  it("rejects non-boolean simulate", () => {
+    expect(() =>
+      parsePrepareBody({
+        ...valid,
+        amountDecimal: "1",
+        simulate: "yes" as unknown as boolean,
+      }),
+    ).toThrow(/simulate/i);
   });
 });
 

@@ -93,7 +93,7 @@ describe("/v1/prepare/:verb", () => {
     );
     expect(res.status).toBe(400);
     const body = await asJson(res);
-    expect(body.error).toContain("`chain` is required");
+    expect(body.error).toContain("`asset` is required");
   });
 
   it("rejects unknown verb with 400", async () => {
@@ -142,7 +142,7 @@ describe("GET /v1/prepare/:verb (query-param mode)", () => {
     const res = await app.request("/v1/prepare/supply", undefined, ENV);
     expect(res.status).toBe(400);
     const body = await asJson(res);
-    expect(body.error).toContain("`chain` is required");
+    expect(body.error).toContain("`asset` is required");
   });
 
   it("rejects unknown verb with 400", async () => {
