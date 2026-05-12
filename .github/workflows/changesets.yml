@@ -21,12 +21,12 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Clone repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -37,7 +37,7 @@ jobs:
         uses: ./.github/actions/install-dependencies
 
       - name: Create Version Pull Request
-        uses: changesets/action@v1
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1.8.0
         with:
           setupGitUser: false
           commit: 'chore: version package'
@@ -57,10 +57,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Clone repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -72,7 +72,7 @@ jobs:
 
       - name: Publish to NPM
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1.8.0
         with:
           setupGitUser: false
           createGithubReleases: ${{ github.ref == 'refs/heads/main' }}
