@@ -1,6 +1,11 @@
 export class MoonwellError extends Error {
   constructor(
-    public code: "USAGE" | "UNSUPPORTED" | "UNAVAILABLE" | "INTERNAL",
+    public code:
+      | "USAGE"
+      | "UNSUPPORTED"
+      | "UNAVAILABLE"
+      | "INTERNAL"
+      | "NOT_FOUND",
     message: string,
     public cause?: unknown,
   ) {
@@ -21,11 +26,16 @@ export function unavailable(message: string, cause?: unknown): MoonwellError {
   return new MoonwellError("UNAVAILABLE", message, cause);
 }
 
+export function notFound(message: string): MoonwellError {
+  return new MoonwellError("NOT_FOUND", message);
+}
+
 export const EXIT_CODES: Record<MoonwellError["code"], number> = {
   USAGE: 2,
   UNSUPPORTED: 3,
   UNAVAILABLE: 4,
   INTERNAL: 1,
+  NOT_FOUND: 5,
 };
 
 export function exitCode(err: unknown): number {
@@ -39,13 +49,14 @@ export function exitCode(err: unknown): number {
  * HTTP status mapping for the worker API. Exported here (rather than in API
  * package code) so this module stays a single source of truth across CLI + API.
  */
-export type HttpStatus = 400 | 500 | 503;
+export type HttpStatus = 400 | 404 | 500 | 503;
 
 export const HTTP_STATUS: Record<MoonwellError["code"], HttpStatus> = {
   USAGE: 400,
   UNSUPPORTED: 400,
   UNAVAILABLE: 503,
   INTERNAL: 500,
+  NOT_FOUND: 404,
 };
 
 export function statusFor(err: unknown): HttpStatus {

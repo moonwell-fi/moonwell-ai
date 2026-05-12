@@ -3,6 +3,7 @@ import type { Market } from "@moonwell-fi/moonwell-sdk";
 import type { Env } from "../env.js";
 import { setupChain, parsePositiveInt } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
+import { notFound } from "../lib/errors.js";
 
 const READ_CACHE_SECONDS = 30;
 
@@ -108,7 +109,7 @@ markets.get("/:id", async (c) => {
         c,
         "markets",
         chain.chainId,
-        new Error(`Market "${id}" not found on ${chain.name}`),
+        notFound(`Market "${id}" not found on ${chain.name}`),
       );
     }
 
