@@ -9,6 +9,7 @@ import { mTokenAbi, comptrollerAbi, erc20Abi } from "./abis.js";
 import { getContracts } from "./contracts.js";
 import type {
   LendVerb,
+  Precondition,
   PrepareResult,
   UnsignedTx,
   SimulationResult,
@@ -49,6 +50,7 @@ export async function prepareLendAction(
 
   const transactions: UnsignedTx[] = [];
   const requirements: string[] = [];
+  const preconditions: Precondition[] = [];
   const warnings: string[] = [];
   // Both `ETH` (SDK's symbol for the mWETH market) and `WETH` (the actual
   // ERC-20 symbol) need the wrap/unwrap warning. The route handler
@@ -96,6 +98,16 @@ export async function prepareLendAction(
       });
 
       requirements.push(`Sufficient ${asset} balance`, `Gas for ${transactions.length} transaction(s)`);
+      preconditions.push(
+        {
+          type: "balance",
+          asset,
+          assetAddress,
+          min: amount.toString(),
+          minDecimal: amountDecimal,
+        },
+        { type: "gas", transactionCount: transactions.length },
+      );
 
       if (isWethMarket) {
         warnings.push(
@@ -123,6 +135,15 @@ export async function prepareLendAction(
       requirements.push(
         `Sufficient mToken balance to redeem ${amountDecimal} ${asset}`,
         "Gas for 1 transaction",
+      );
+      preconditions.push(
+        {
+          type: "mtoken-balance",
+          mToken,
+          minUnderlying: amount.toString(),
+          minUnderlyingDecimal: amountDecimal,
+        },
+        { type: "gas", transactionCount: 1 },
       );
 
       if (isWethMarket) {
@@ -152,6 +173,11 @@ export async function prepareLendAction(
         "Sufficient collateral deposited and market entered",
         "Account health factor must remain above 1.0 after borrow",
         "Gas for 1 transaction",
+      );
+      preconditions.push(
+        { type: "collateral-entered", mToken },
+        { type: "health-factor", minAfter: 1.0 },
+        { type: "gas", transactionCount: 1 },
       );
 
       if (isWethMarket) {
@@ -190,6 +216,16 @@ export async function prepareLendAction(
       });
 
       requirements.push(`Sufficient ${asset} balance`, `Gas for ${transactions.length} transaction(s)`);
+      preconditions.push(
+        {
+          type: "balance",
+          asset,
+          assetAddress,
+          min: amount.toString(),
+          minDecimal: amountDecimal,
+        },
+        { type: "gas", transactionCount: transactions.length },
+      );
 
       if (isWethMarket) {
         warnings.push(
@@ -213,6 +249,7 @@ export async function prepareLendAction(
     from,
     transactions,
     requirements,
+    preconditions,
     preview: {
       asset,
       amount: amount.toString(),

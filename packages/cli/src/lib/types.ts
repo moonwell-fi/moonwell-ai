@@ -50,13 +50,48 @@ export interface SimulationResult {
   note?: string;
 }
 
+/**
+ * Machine-checkable mirror of the human-readable `requirements[]`.
+ * Agents should check `preconditions[]` before broadcasting.
+ */
+export type Precondition =
+  | {
+      type: "balance";
+      asset: string;
+      assetAddress: Address;
+      min: string;
+      minDecimal: string;
+    }
+  | {
+      type: "mtoken-balance";
+      mToken: Address;
+      minUnderlying: string;
+      minUnderlyingDecimal: string;
+    }
+  | {
+      type: "collateral-entered";
+      mToken: Address;
+    }
+  | {
+      type: "health-factor";
+      /** Account health factor must remain >= this value after the action. */
+      minAfter: number;
+    }
+  | {
+      type: "gas";
+      transactionCount: number;
+    };
+
 export interface PrepareResult {
   operation: LendVerb;
   chain: string;
   chainId: number;
   from: Address;
   transactions: UnsignedTx[];
+  /** Human-readable constraints (kept for back-compat / display). */
   requirements: string[];
+  /** Structured, machine-checkable mirror of `requirements[]`. */
+  preconditions: Precondition[];
   preview: {
     asset: string;
     amount: string;

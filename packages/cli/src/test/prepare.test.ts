@@ -51,6 +51,83 @@ const USDC: Address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const M_USDC: Address = "0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22";
 const DEAD: Address = "0x000000000000000000000000000000000000dEaD";
 
+describe("PrepareResult.preconditions[]", () => {
+  it("supply emits structured balance + gas preconditions", async () => {
+    const viemClient = mockViemClient({
+      allowance: 2n ** 256n - 1n, // skip approval
+      isMember: true,
+      gas: 200_000n,
+    });
+    const result = await prepareLendAction({
+      verb: "supply",
+      chainId: 8453,
+      asset: "USDC",
+      assetAddress: USDC,
+      assetDecimals: 6,
+      amount: 100_000_000n,
+      amountDecimal: "100",
+      from: DEAD,
+      mToken: M_USDC,
+      viemClient,
+      simulate: false,
+    });
+    expect(Array.isArray(result.preconditions)).toBe(true);
+    const balance = result.preconditions.find((p) => p.type === "balance");
+    expect(balance).toMatchObject({
+      type: "balance",
+      asset: "USDC",
+      assetAddress: USDC,
+      min: "100000000",
+      minDecimal: "100",
+    });
+    const gas = result.preconditions.find((p) => p.type === "gas");
+    expect(gas).toMatchObject({ type: "gas", transactionCount: 1 });
+  });
+
+  it("borrow emits collateral-entered + health-factor + gas", async () => {
+    const viemClient = mockViemClient({ gas: 200_000n });
+    const result = await prepareLendAction({
+      verb: "borrow",
+      chainId: 8453,
+      asset: "USDC",
+      assetAddress: USDC,
+      assetDecimals: 6,
+      amount: 1_000_000n,
+      amountDecimal: "1",
+      from: DEAD,
+      mToken: M_USDC,
+      viemClient,
+      simulate: false,
+    });
+    const types = result.preconditions.map((p) => p.type).sort();
+    expect(types).toEqual(["collateral-entered", "gas", "health-factor"]);
+  });
+
+  it("withdraw emits mtoken-balance precondition", async () => {
+    const viemClient = mockViemClient({ gas: 200_000n });
+    const result = await prepareLendAction({
+      verb: "withdraw",
+      chainId: 8453,
+      asset: "USDC",
+      assetAddress: USDC,
+      assetDecimals: 6,
+      amount: 1_000_000n,
+      amountDecimal: "1",
+      from: DEAD,
+      mToken: M_USDC,
+      viemClient,
+      simulate: false,
+    });
+    const mt = result.preconditions.find((p) => p.type === "mtoken-balance");
+    expect(mt).toMatchObject({
+      type: "mtoken-balance",
+      mToken: M_USDC,
+      minUnderlying: "1000000",
+      minUnderlyingDecimal: "1",
+    });
+  });
+});
+
 describe("SimulationResult shape", () => {
   it("uses gasEstimateSucceeded (not legacy `success`)", async () => {
     const viemClient = mockViemClient({
