@@ -23,8 +23,8 @@
     "sync-shared": "node scripts/sync-shared-libs.mjs"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.27.10",
-    "wrangler": "^3.90.0"
+    "@changesets/changelog-github": "0.5.2",
+    "@changesets/cli": "2.31.0",
+    "wrangler": "3.114.17"
   }
 }
