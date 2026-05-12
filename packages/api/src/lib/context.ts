@@ -48,6 +48,17 @@ export function parsePositiveInt(value: string | undefined, name: string): numbe
   return n;
 }
 
+/** Parse "true"/"false"/undefined query value. Throws USAGE on anything else. */
+export function parseBoolQuery(
+  value: string | undefined,
+  name: string,
+): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  throw usage(`Invalid ${name}: "${value}" (expected "true" or "false")`);
+}
+
 /**
  * Accept only values in `allowed`. Returns the value (with `defaultValue`
  * applied) or throws USAGE listing the legal options. Use for any query-

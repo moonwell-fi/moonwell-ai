@@ -65,6 +65,17 @@ describe("validation — bad query params 400, no RPC needed", () => {
     expect(body.error).toContain("min-tvl");
   });
 
+  it("/v1/positions/:addr?active=garbage returns 400", async () => {
+    const res = await app.request(
+      "/v1/positions/0x000000000000000000000000000000000000dEaD?chain=base&active=garbage",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson<{ error: string }>(res);
+    expect(body.error).toMatch(/active/i);
+  });
+
   it("/v1/positions/notahex returns 400", async () => {
     const res = await app.request("/v1/positions/notahex", undefined, ENV);
     expect(res.status).toBe(400);
