@@ -5,7 +5,7 @@ import { resolveChain } from "../lib/chains.js";
 import { clientForChain } from "../lib/moonwell.js";
 import { getViemClient } from "../lib/client.js";
 import { resolveMToken } from "../lib/mtoken-resolver.js";
-import { prepareLendAction } from "../lib/prepare.js";
+import { prepareLendAction, resolveAssetForLend } from "../lib/prepare.js";
 import { isJsonMode, envelope, printJson, handleError } from "../lib/output.js";
 import { header, footer, labelValue, c } from "../lib/format.js";
 import { toBaseUnits, toDecimal } from "../lib/amount.js";
@@ -57,25 +57,11 @@ export async function executeLendCommand(
     const sdkClient = clientForChain(chain, globalOpts.rpcUrl);
     const viemClient = getViemClient(chain, globalOpts.rpcUrl);
 
-    // Resolve asset from SDK markets
+    // Resolve asset from SDK markets — shared with the API route handler
+    // so `--asset WETH` / `--asset ETH` behave identically across packages.
     const markets = await sdkClient.getMarkets({ chainId: chain.chainId });
-    const market = markets.find(
-      (m) =>
-        m.underlyingToken.symbol.toUpperCase() ===
-        opts.asset.toUpperCase(),
-    );
-
-    if (!market) {
-      throw usage(
-        `Asset "${opts.asset}" not found in Moonwell markets on ${chain.name}`,
-      );
-    }
-
-    const assetAddress = getAddress(
-      market.underlyingToken.address,
-    ) as Address;
-    const assetDecimals: number = market.underlyingToken.decimals;
-    const assetSymbol: string = market.underlyingToken.symbol;
+    const { market, assetAddress, assetDecimals, assetSymbol } =
+      resolveAssetForLend(markets, chain.chainId, opts.asset, chain.name);
 
     // Resolve amount
     let amount: bigint;
@@ -128,7 +114,15 @@ export async function executeLendCommand(
     }
   } catch (err) {
     spinner?.fail(`Failed to prepare ${verb}`);
-    const chainId = (() => { try { return resolveChain(globalOpts.chain ?? "base").chainId; } catch { return 0; } })();
+    // If chain resolution itself failed, pass null so the envelope emits
+    // meta.chain: null rather than eip155:0.
+    const chainId: number | null = (() => {
+      try {
+        return resolveChain(globalOpts.chain ?? "base").chainId;
+      } catch {
+        return null;
+      }
+    })();
     handleError(verb, chainId, err, json);
     process.exit(exitCode(err));
   }
@@ -174,17 +168,17 @@ function printPrepareResultPretty(result: PrepareResult, chainName: string): voi
 
   if (result.simulation) {
     console.log("");
-    if (result.simulation.success) {
+    if (result.simulation.gasEstimateSucceeded) {
       console.log(
         labelValue(
-          "Simulation",
-          c.positive(`Passed (gas: ${result.simulation.gasEstimate})`),
+          "Gas estimate",
+          c.positive(`Passed (${result.simulation.gasEstimate})`),
         ),
       );
     } else {
       console.log(
         labelValue(
-          "Simulation",
+          "Gas estimate",
           c.negative(`Failed: ${result.simulation.error}`),
         ),
       );

@@ -1,14 +1,16 @@
 import { Hono } from "hono";
 import type { Env } from "../env.js";
-import { setupChain, requireAddress } from "../lib/context.js";
+import { setupChain, requireAddress, parseBoolQuery } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 
 const accounts = new Hono<{ Bindings: Env }>();
 
-/** GET /v1/positions/:address?chain=…[&asset=…] */
+/** GET /v1/positions/:address?chain=…[&asset=…&active=true|false] */
 accounts.get("/positions/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
+    // Validate active= before touching RPC.
+    const active = parseBoolQuery(c.req.query("active"), "active");
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
     const address = requireAddress(c.req.param("address"));
@@ -24,6 +26,11 @@ accounts.get("/positions/:address", async (c) => {
       const sym = asset.toUpperCase();
       filtered = filtered.filter(
         (p) => p.market.symbol.toUpperCase() === sym,
+      );
+    }
+    if (active) {
+      filtered = filtered.filter(
+        (p) => p.suppliedUsd > 0 || p.borrowedUsd > 0,
       );
     }
 
@@ -47,7 +54,7 @@ accounts.get("/positions/:address", async (c) => {
 
 /** GET /v1/health/:address?chain=… */
 accounts.get("/health/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
@@ -85,7 +92,7 @@ accounts.get("/health/:address", async (c) => {
 
 /** GET /v1/rewards/:address?chain=… */
 accounts.get("/rewards/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
@@ -114,7 +121,7 @@ accounts.get("/rewards/:address", async (c) => {
 
 /** GET /v1/token-balance/:address?chain=…[&asset=…] */
 accounts.get("/token-balance/:address", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;

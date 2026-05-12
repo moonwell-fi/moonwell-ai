@@ -30,6 +30,17 @@ const SYNCED = [
   "errors.ts",
 ];
 
+// Doc files copied verbatim from packages/skill/ to packages/web/public/.
+// agents.moonwell.fi/skill.md serves this directly (static asset); the
+// canonical source lives in packages/skill/ so the npm-published package
+// can ship it.
+const SYNCED_DOCS = [
+  {
+    src: join(repoRoot, "packages", "skill", "SKILL.md"),
+    dst: join(repoRoot, "packages", "web", "public", "skill.md"),
+  },
+];
+
 // Files that intentionally diverge — manual reconciliation only.
 // (The worker variants are named differently where appropriate to make the
 // split obvious in code review and avoid accidental hand-syncs.)
@@ -42,9 +53,7 @@ const EXCLUDED_NOTE = [
 const checkOnly = process.argv.includes("--check");
 let mismatches = 0;
 
-for (const file of SYNCED) {
-  const src = join(cliLib, file);
-  const dst = join(apiLib, file);
+function syncPair(src, dst) {
   const srcContent = readFileSync(src, "utf8");
   let dstContent = "";
   try {
@@ -57,16 +66,24 @@ for (const file of SYNCED) {
     if (!checkOnly) {
       console.log(`= ${relative(repoRoot, dst)}`);
     }
-    continue;
+    return false; // not a mismatch
   }
 
-  mismatches++;
   if (checkOnly) {
     console.error(`! ${relative(repoRoot, dst)} (out of sync with ${relative(repoRoot, src)})`);
   } else {
     writeFileSync(dst, srcContent);
     console.log(`✓ ${relative(repoRoot, dst)}`);
   }
+  return true;
+}
+
+for (const file of SYNCED) {
+  if (syncPair(join(cliLib, file), join(apiLib, file))) mismatches++;
+}
+
+for (const { src, dst } of SYNCED_DOCS) {
+  if (syncPair(src, dst)) mismatches++;
 }
 
 if (checkOnly && mismatches > 0) {

@@ -14,10 +14,15 @@ async function asJson<T = Record<string, unknown>>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
+// 127.0.0.1:1 — connection refused fails in milliseconds on every OS.
+// Avoids DNS-based test timeouts that we saw with `invalid-rpc.test`:
+// some self-hosted CI runners hang on NXDOMAIN lookups long enough to
+// exceed vitest's 30s default. Tests that pass validation and then hit
+// the SDK still get a fast, deterministic upstream error.
 const ENV: Env = {
   ENVIRONMENT: "production",
-  BASE_RPC_URL: "https://invalid-rpc.test",
-  OPTIMISM_RPC_URL: "https://invalid-rpc.test",
+  BASE_RPC_URL: "http://127.0.0.1:1",
+  OPTIMISM_RPC_URL: "http://127.0.0.1:1",
 };
 
 const ENV_NO_RPC: Env = {
@@ -65,6 +70,17 @@ describe("validation — bad query params 400, no RPC needed", () => {
     expect(body.error).toContain("min-tvl");
   });
 
+  it("/v1/positions/:addr?active=garbage returns 400", async () => {
+    const res = await app.request(
+      "/v1/positions/0x000000000000000000000000000000000000dEaD?chain=base&active=garbage",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson<{ error: string }>(res);
+    expect(body.error).toMatch(/active/i);
+  });
+
   it("/v1/positions/notahex returns 400", async () => {
     const res = await app.request("/v1/positions/notahex", undefined, ENV);
     expect(res.status).toBe(400);
@@ -77,6 +93,61 @@ describe("validation — bad query params 400, no RPC needed", () => {
     expect(res.status).toBe(400);
     const body = await asJson(res);
     expect(body.error).toContain("Unsupported chain");
+  });
+
+  it("/v1/yield?sort=garbage returns 400 with valid sort list", async () => {
+    const res = await app.request(
+      "/v1/yield?sort=garbage&chain=base",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson<{ error: string }>(res);
+    expect(body.error).toMatch(/sort/i);
+    expect(body.error).toMatch(/apy|tvl/);
+  });
+
+  it("/v1/markets?sort=garbage returns 400 with valid sort list", async () => {
+    const res = await app.request(
+      "/v1/markets?sort=garbage&chain=base",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson<{ error: string }>(res);
+    expect(body.error).toMatch(/sort/i);
+  });
+});
+
+describe("/v1/prepare/:verb — chain default", () => {
+  it("doesn't reject when `chain` is omitted (defaults to base downstream)", async () => {
+    // The validator must not throw on missing chain. The SDK call may still
+    // fail with the bogus RPC URL, but the error must NOT be "chain is required".
+    const res = await app.request(
+      "/v1/prepare/supply",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          asset: "USDC",
+          amountDecimal: "1",
+          from: "0x000000000000000000000000000000000000dEaD",
+        }),
+      },
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    expect(body.error ?? "").not.toContain("`chain` is required");
+  });
+
+  it("doesn't reject GET when `chain` is omitted from query", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?asset=USDC&amountDecimal=1&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    expect(body.error ?? "").not.toContain("`chain` is required");
   });
 });
 
@@ -93,7 +164,7 @@ describe("/v1/prepare/:verb", () => {
     );
     expect(res.status).toBe(400);
     const body = await asJson(res);
-    expect(body.error).toContain("`chain` is required");
+    expect(body.error).toContain("`asset` is required");
   });
 
   it("rejects unknown verb with 400", async () => {
@@ -142,7 +213,7 @@ describe("GET /v1/prepare/:verb (query-param mode)", () => {
     const res = await app.request("/v1/prepare/supply", undefined, ENV);
     expect(res.status).toBe(400);
     const body = await asJson(res);
-    expect(body.error).toContain("`chain` is required");
+    expect(body.error).toContain("`asset` is required");
   });
 
   it("rejects unknown verb with 400", async () => {
@@ -195,6 +266,37 @@ describe("GET /v1/prepare/:verb (query-param mode)", () => {
   });
 });
 
+describe("/v1/prepare/* — WETH/ETH alias", () => {
+  // We can't drive the full request to success without a working RPC, but we
+  // CAN prove that the validator + lookup path no longer reject these inputs
+  // with the legacy errors (the bug). On a working RPC the error would be
+  // 503 or 200; on this dummy RPC it's an upstream fetch failure — either
+  // way the response error MUST NOT be the old "Asset \"WETH\" not found".
+  it("asset=WETH no longer fails with 'not found' on validation", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?chain=base&asset=WETH&amountDecimal=0.001&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    expect(body.error ?? "").not.toMatch(/Asset "WETH" not found/);
+  });
+
+  it("asset=ETH reaches the SDK lookup (no 'not found' on validation)", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?chain=base&asset=ETH&amountDecimal=0.001&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    // Old failure mode was "Asset \"ETH\" not found" (when the SDK didn't
+    // expose ETH symbol) or an unwrapped allowance() crash on 0x000.
+    // Either is fixed; whatever upstream RPC error remains must NOT be
+    // either of those.
+    expect(body.error ?? "").not.toMatch(/Asset .* not found/);
+  });
+});
+
 describe("404 + envelope shape", () => {
   it("unknown path returns 404 with hint", async () => {
     const res = await app.request("/v1/does-not-exist", undefined, ENV);
@@ -213,6 +315,13 @@ describe("404 + envelope shape", () => {
   it("error responses are application/json", async () => {
     const res = await app.request("/v1/markets?limit=abc", undefined, ENV);
     expect(res.headers.get("content-type")).toContain("application/json");
+  });
+
+  it("meta.chain is null when chain never resolves", async () => {
+    const res = await app.request("/v1/markets?limit=abc", undefined, ENV);
+    expect(res.status).toBe(400);
+    const body = await asJson<{ meta: { chain: string | null } }>(res);
+    expect(body.meta.chain).toBeNull();
   });
 });
 

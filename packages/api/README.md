@@ -21,20 +21,20 @@ All responses use `{ success, data, meta, error? }`. See <https://agents.moonwel
 | Method | Path | Returns |
 |---|---|---|
 | GET | `/v1/_health` | `{ ok: true }` liveness probe |
-| GET | `/v1/markets?chain=…[&asset=…&sort=…&limit=…]` | All markets on chain |
-| GET | `/v1/markets/:symbolOrAddress?chain=…` | One market |
+| GET | `/v1/markets?chain=…[&asset=…&sort=…&limit=…]` | All markets on chain. Sort: `tvl` (default), `supply-apy`, `borrow-apy`. Includes `deprecated:bool` per row. |
+| GET | `/v1/markets/:symbolOrAddress?chain=…` | One market (404 if unknown) |
 | GET | `/v1/rates?chain=…[&asset=…]` | Supply/borrow rates + utilization |
-| GET | `/v1/positions/:address?chain=…[&asset=…]` | User lending positions |
+| GET | `/v1/positions/:address?chain=…[&asset=…&active=true]` | User lending positions; `active=true` drops zero-balance rows |
 | GET | `/v1/health/:address?chain=…` | Health factor + liquidity |
 | GET | `/v1/rewards/:address?chain=…` | Pending WELL rewards |
-| GET | `/v1/yield?chain=…[&asset=…&min-tvl=…&sort=…&limit=…]` | Yield opportunities |
+| GET | `/v1/yield?chain=…[&asset=…&min-tvl=…&sort=…&limit=…]` | Yield opportunities. Sort: `apy` (default), `tvl`. |
 | GET | `/v1/token-balance/:address?chain=…[&asset=…]` | ERC-20 balances |
-| POST | `/v1/prepare/supply` | Unsigned calldata for supply |
-| POST | `/v1/prepare/withdraw` | Unsigned calldata for withdraw |
-| POST | `/v1/prepare/borrow` | Unsigned calldata for borrow |
-| POST | `/v1/prepare/repay` | Unsigned calldata for repay |
+| POST or GET | `/v1/prepare/supply` | Unsigned calldata for supply |
+| POST or GET | `/v1/prepare/withdraw` | Unsigned calldata for withdraw |
+| POST or GET | `/v1/prepare/borrow` | Unsigned calldata for borrow |
+| POST or GET | `/v1/prepare/repay` | Unsigned calldata for repay |
 
-Prepare body: `{ chain, asset, amountDecimal | amount, from, simulate? }`.
+Prepare body / query: `{ chain?, asset, amountDecimal | amount, from, simulate? }`. `chain` defaults to `base`. `asset=ETH` is accepted as an alias for `WETH`. `value` on each unsigned tx is 0x-prefixed hex (EIP-5792). Unknown sort values and malformed amounts (scientific notation, JSON numbers, sub-precision decimals, negatives) return `400`. Responses include a structured `preconditions[]` array alongside the human `requirements[]`.
 
 ## Health probe
 

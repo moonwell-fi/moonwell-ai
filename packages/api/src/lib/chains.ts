@@ -12,6 +12,12 @@ export interface ChainConfig {
   defaultRpcUrl: string;
 }
 
+/** Every chain ID this codebase claims to support. Use as the source of
+ *  truth for parity tests against per-chain lookup tables (WETH addresses,
+ *  deprecated markets, etc) so adding a new chain in one place doesn't
+ *  silently 500 from another. */
+export const SUPPORTED_CHAIN_IDS = [8453, 10] as const;
+
 export const SUPPORTED_CHAINS: Record<NetworkName, ChainConfig> = {
   base: {
     chainId: 8453,

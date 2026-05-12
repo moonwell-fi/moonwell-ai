@@ -4,7 +4,7 @@ import type { Env } from "../env.js";
 import { setupChain, parsePrepareBody } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 import { resolveMToken } from "../lib/mtoken-resolver.js";
-import { prepareLendAction } from "../lib/prepare.js";
+import { prepareLendAction, resolveAssetForLend } from "../lib/prepare.js";
 import { toBaseUnits, toDecimal } from "../lib/amount.js";
 import { usage } from "../lib/errors.js";
 import type { LendVerb } from "../lib/types.js";
@@ -24,7 +24,13 @@ const QUERY_FIELDS = [
 
 // Reshape query-string params into the same flat object that
 // `parsePrepareBody` validates, so GET and POST share validation.
-// `simulate` is a boolean in JSON bodies but a string in query params.
+//
+// `simulate` gets validated here (string "true"/"false") rather than via
+// `parsePrepareBody` (which expects a boolean). Two error messages for
+// the same field, by design: query-string callers see "expected 'true'
+// or 'false'", JSON-body callers see "must be a boolean". The split
+// avoids quietly coercing strings to booleans inside parsePrepareBody
+// (which would mask malformed JSON inputs like `simulate: "true"`).
 function bodyFromQuery(query: (name: string) => string | undefined): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const k of QUERY_FIELDS) {
@@ -50,18 +56,9 @@ async function runPrepare(env: Env, verbParam: string, body: unknown) {
   const { chain, sdkClient, viemClient } = setupChain(env, parsed.chain);
 
   const markets = await sdkClient.getMarkets({ chainId: chain.chainId });
-  const market = markets.find(
-    (m) => m.underlyingToken.symbol.toUpperCase() === parsed.asset.toUpperCase(),
-  );
-  if (!market) {
-    throw usage(
-      `Asset "${parsed.asset}" not found in Moonwell markets on ${chain.name}`,
-    );
-  }
 
-  const assetAddress = getAddress(market.underlyingToken.address) as Address;
-  const assetDecimals = market.underlyingToken.decimals as number;
-  const assetSymbol = market.underlyingToken.symbol as string;
+  const { market, assetAddress, assetDecimals, assetSymbol } =
+    resolveAssetForLend(markets, chain.chainId, parsed.asset, chain.name);
 
   let amount: bigint;
   let amountDecimal: string;
@@ -108,7 +105,7 @@ async function runPrepare(env: Env, verbParam: string, body: unknown) {
 /** POST /v1/prepare/:verb */
 prepare.post("/:verb", async (c) => {
   const verbParam = c.req.param("verb");
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const body = await c.req.json().catch(() => {
       throw usage("Request body must be valid JSON");
@@ -132,7 +129,7 @@ prepare.post("/:verb", async (c) => {
  */
 prepare.get("/:verb", async (c) => {
   const verbParam = c.req.param("verb");
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const body = bodyFromQuery((name) => c.req.query(name));
     const { verb, chain, result } = await runPrepare(c.env, verbParam, body);

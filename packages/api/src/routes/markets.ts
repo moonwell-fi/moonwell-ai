@@ -1,8 +1,14 @@
 import { Hono } from "hono";
 import type { Market } from "@moonwell-fi/moonwell-sdk";
 import type { Env } from "../env.js";
-import { setupChain, parsePositiveInt } from "../lib/context.js";
+import {
+  setupChain,
+  parsePositiveInt,
+  parseEnumQuery,
+} from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
+import { notFound } from "../lib/errors.js";
+import { isDeprecatedMarket } from "../lib/contracts.js";
 
 const READ_CACHE_SECONDS = 30;
 
@@ -12,12 +18,18 @@ function utilization(m: Pick<Market, "totalSupplyUsd" | "totalBorrowsUsd">): num
   return m.totalSupplyUsd > 0 ? m.totalBorrowsUsd / m.totalSupplyUsd : 0;
 }
 
-function marketToJson(m: Market): Record<string, unknown> {
+function marketToJson(m: Market, chainId: number): Record<string, unknown> {
   return {
     asset: m.underlyingToken.symbol,
     assetAddress: m.underlyingToken.address,
     mToken: m.marketToken.symbol,
     mTokenAddress: m.marketToken.address,
+    /**
+     * True for legacy/wind-down markets like Base mUSDbC. The symbol can
+     * still collide with the canonical market (both report `mUSDC`), so
+     * downstream consumers should filter on this rather than the symbol.
+     */
+    deprecated: isDeprecatedMarket(chainId, m.marketToken.address),
     baseSupplyApy: m.baseSupplyApy,
     baseBorrowApy: m.baseBorrowApy,
     totalSupplyApr: m.totalSupplyApr,
@@ -32,11 +44,16 @@ function marketToJson(m: Market): Record<string, unknown> {
 
 /** GET /v1/markets?chain=…[&asset=…&sort=…&limit=…] */
 markets.get("/", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     // Validate inputs before touching RPC — fail fast on bad params.
     const limit = parsePositiveInt(c.req.query("limit"), "limit");
-    const sortKey = c.req.query("sort") ?? "tvl";
+    const sortKey = parseEnumQuery(
+      c.req.query("sort"),
+      "sort",
+      ["tvl", "supply-apy", "borrow-apy"] as const,
+      "tvl",
+    );
     const asset = c.req.query("asset");
 
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
@@ -60,7 +77,7 @@ markets.get("/", async (c) => {
           return b.baseSupplyApy - a.baseSupplyApy;
         case "borrow-apy":
           return a.baseBorrowApy - b.baseBorrowApy;
-        default:
+        case "tvl":
           return b.totalSupplyUsd - a.totalSupplyUsd;
       }
     });
@@ -69,9 +86,13 @@ markets.get("/", async (c) => {
       filtered = filtered.slice(0, limit);
     }
 
-    return ok(c, "markets", chain.chainId, filtered.map(marketToJson), {
-      cacheSeconds: READ_CACHE_SECONDS,
-    });
+    return ok(
+      c,
+      "markets",
+      chain.chainId,
+      filtered.map((m) => marketToJson(m, chain.chainId)),
+      { cacheSeconds: READ_CACHE_SECONDS },
+    );
   } catch (err) {
     return fail(c, "markets", chainId, err);
   }
@@ -79,7 +100,7 @@ markets.get("/", async (c) => {
 
 /** GET /v1/markets/:id?chain=…  (id = symbol or mToken/underlying address) */
 markets.get("/:id", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
     chainId = chain.chainId;
@@ -108,11 +129,11 @@ markets.get("/:id", async (c) => {
         c,
         "markets",
         chain.chainId,
-        new Error(`Market "${id}" not found on ${chain.name}`),
+        notFound(`Market "${id}" not found on ${chain.name}`),
       );
     }
 
-    return ok(c, "markets", chain.chainId, marketToJson(market), {
+    return ok(c, "markets", chain.chainId, marketToJson(market, chain.chainId), {
       cacheSeconds: READ_CACHE_SECONDS,
     });
   } catch (err) {

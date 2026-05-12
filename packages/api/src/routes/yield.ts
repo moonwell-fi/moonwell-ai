@@ -1,7 +1,12 @@
 import { Hono } from "hono";
 import type { Market } from "@moonwell-fi/moonwell-sdk";
 import type { Env } from "../env.js";
-import { setupChain, parsePositiveInt, parseNonNegativeFloat } from "../lib/context.js";
+import {
+  setupChain,
+  parsePositiveInt,
+  parseNonNegativeFloat,
+  parseEnumQuery,
+} from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 
 const READ_CACHE_SECONDS = 30;
@@ -10,12 +15,17 @@ const yieldRoute = new Hono<{ Bindings: Env }>();
 
 /** GET /v1/yield?chain=…[&asset=…&min-tvl=…&sort=apy|tvl&limit=…] */
 yieldRoute.get("/", async (c) => {
-  let chainId = 0;
+  let chainId: number | null = null;
   try {
     // Validate inputs before touching RPC — fail fast on bad params.
     const limit = parsePositiveInt(c.req.query("limit"), "limit");
     const minTvl = parseNonNegativeFloat(c.req.query("min-tvl"), "min-tvl");
-    const sortKey = c.req.query("sort") ?? "apy";
+    const sortKey = parseEnumQuery(
+      c.req.query("sort"),
+      "sort",
+      ["apy", "tvl"] as const,
+      "apy",
+    );
     const asset = c.req.query("asset");
 
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
