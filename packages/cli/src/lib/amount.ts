@@ -1,19 +1,26 @@
+import { usage } from "./errors.js";
+
 /**
  * Convert a human-readable decimal string to base units given token decimals.
- * e.g. "1.5" with 6 decimals → "1500000"
+ * e.g. "1.5" with 6 decimals → 1500000n
+ *
+ * Throws USAGE when the input has more fractional digits than the asset
+ * supports — silent truncation could turn a real amount into `0` and burn
+ * gas for a no-op transaction. Callers must round upstream.
  */
 export function toBaseUnits(decimal: string, decimals: number): bigint {
   const parts = decimal.split(".");
   const whole = parts[0] ?? "0";
-  let frac = parts[1] ?? "";
+  const frac = parts[1] ?? "";
 
   if (frac.length > decimals) {
-    frac = frac.slice(0, decimals);
-  } else {
-    frac = frac.padEnd(decimals, "0");
+    throw usage(
+      `amountDecimal "${decimal}" exceeds asset precision: ${frac.length} fractional digits but the asset has only ${decimals} decimals. Round upstream or use \`amount\` (base units).`,
+    );
   }
 
-  return BigInt(whole + frac);
+  const padded = frac.padEnd(decimals, "0");
+  return BigInt(whole + padded);
 }
 
 /**

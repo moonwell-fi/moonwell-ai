@@ -10,8 +10,18 @@ describe("toBaseUnits", () => {
     expect(toBaseUnits("1.5", 6)).toBe(1_500_000n);
   });
 
-  it("truncates excess decimals", () => {
-    expect(toBaseUnits("1.1234567", 6)).toBe(1_123_456n);
+  it("rejects fractional digits beyond asset precision", () => {
+    expect(() => toBaseUnits("1.1234567", 6)).toThrow(
+      /exceeds asset precision/i,
+    );
+  });
+
+  it("accepts amountDecimal with exactly the asset's precision", () => {
+    expect(toBaseUnits("0.000001", 6)).toBe(1n);
+  });
+
+  it("rejects sub-precision amounts (would truncate to zero)", () => {
+    expect(() => toBaseUnits("0.0000001", 6)).toThrow(/precision|decimals/i);
   });
 
   it("handles no fractional part", () => {
