@@ -50,7 +50,16 @@ curl 'https://api.moonwell.fi/v1/rewards/0xYourAddr?chain=base'
 curl 'https://api.moonwell.fi/v1/token-balance/0xYourAddr?chain=base&asset=USDC'
 ```
 
-`positions` returns `data` as an array of per-market entries — `{ market, marketAddress, suppliedUsd, borrowedUsd, collateralUsd, collateralEnabled }` — not a summary object. Aggregate across the array for totals. **Base has two `mUSDC` entries** (the current market plus the deprecated bridged-USDC market) sharing the same `market` label; disambiguate by `marketAddress` when it matters.
+`positions` returns `data` as an array of per-market entries — `{ market, marketAddress, suppliedUsd, borrowedUsd, collateralUsd, collateralEnabled }` — not a summary object. Aggregate across the array for totals. Pass `?active=true` to drop rows where both `suppliedUsd` and `borrowedUsd` are zero — useful for filtering out the long tail of empty markets.
+
+**Base has two `mUSDC` entries** (the current market plus the deprecated bridged-USDC market) sharing the same `market` label. `/markets*` responses include `deprecated: true` on the legacy row; disambiguate by `marketAddress` or `deprecated` when it matters.
+
+Sort values are validated:
+
+- `/markets?sort=` accepts `tvl` (default), `supply-apy`, `borrow-apy`
+- `/yield?sort=` accepts `apy` (default), `tvl`
+
+Unknown values return `400` with the supported list.
 
 ### Prepare unsigned calldata
 
@@ -74,10 +83,10 @@ Verbs: `supply`, `withdraw`, `borrow`, `repay`. Body / query fields:
 
 | Field | Type | Notes |
 |---|---|---|
-| `chain` | string | `base` / `optimism` / chain ID |
-| `asset` | string | Underlying symbol, e.g. `USDC`, `WETH` |
-| `amount` | string | Base units (e.g. `"1000000"` for 1 USDC). Use this **or** `amountDecimal`. |
-| `amountDecimal` | string | Human-readable decimal (e.g. `"1.0"`). Use this **or** `amount`. |
+| `chain` | string? | Defaults to `base`. Accepts `base` / `optimism` / chain ID |
+| `asset` | string | Underlying symbol, e.g. `USDC`, `WETH` (`ETH` is an alias for `WETH`) |
+| `amount` | string | Base units (e.g. `"1000000"` for 1 USDC). Use this **or** `amountDecimal`, never both. |
+| `amountDecimal` | string | Human-readable decimal (e.g. `"1.0"`). Use this **or** `amount`, never both. Scientific notation and JSON numbers are rejected. |
 | `from` | string | 0x-prefixed sender address |
 | `poolAddress` | string? | Override mToken (auto-resolved when omitted) |
 | `simulate` | boolean? | Defaults `true`; first-step gas estimate via `eth_estimateGas` |
@@ -90,14 +99,24 @@ The response's `data.transactions[]` is an ordered array of unsigned txs:
   "description": "Approve token for Moonwell supply",
   "to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "data": "0x095ea7b3...",
-  "value": "0",
+  "value": "0x0",
   "chainId": 8453
 }
 ```
 
-`step` values: `approve`, `enter-market`, `moonwell-supply`, `moonwell-withdraw`, `moonwell-borrow`, `moonwell-repay`.
+`step` values: `approve`, `enter-market`, `moonwell-supply`, `moonwell-withdraw`, `moonwell-borrow`, `moonwell-repay`. `value` is 0x-prefixed hex (EIP-5792 / JSON-RPC convention) — `"0x0"` for ERC-20 calls; native-ETH calls use the wei amount in hex.
 
-Sign and broadcast each in order. After step 1 confirms, the next step's gas may need a manual cap (public RPCs can serve stale state — see `simulation.skippedSteps`). **Note:** `simulation.success: true` only means gas estimation did not revert — Compound v2 functions return non-zero error codes for business-logic failures without reverting (see [Compound v2 error codes](#compound-v2-error-codes) below), so always check on-chain receipts after broadcast.
+The response also carries `preconditions[]`, a structured machine-checkable mirror of `requirements[]`. Variants:
+
+- `{ type: "balance", asset, assetAddress, min, minDecimal }`
+- `{ type: "mtoken-balance", mToken, minUnderlying, minUnderlyingDecimal }`
+- `{ type: "collateral-entered", mToken }`
+- `{ type: "health-factor", minAfter }`
+- `{ type: "gas", transactionCount }`
+
+Use `preconditions[]` when verifying constraints programmatically; keep `requirements[]` for human display.
+
+Sign and broadcast each in order. After step 1 confirms, the next step's gas may need a manual cap (public RPCs can serve stale state — see `simulation.skippedSteps`). **Note:** `simulation.gasEstimateSucceeded: true` only means `eth_estimateGas` did not revert on step 1 — Compound v2 functions return non-zero error codes for business-logic failures without reverting (see [Compound v2 error codes](#compound-v2-error-codes) below), so always check on-chain receipts after broadcast.
 
 ### Caching
 
@@ -216,6 +235,8 @@ The API/CLI auto-includes steps 1 and 2 only when needed (allowance < amount, no
 ### WETH special-case
 
 Moonwell mWETH **auto-unwraps to native ETH on borrow/withdraw** (you receive ETH). Supply/repay still requires the **ERC-20 WETH path** — wrap ETH→WETH first if needed. Both modes emit a warning for WETH operations.
+
+Both `asset=ETH` and `asset=WETH` resolve to the same mWETH market. The API substitutes the chain's real WETH ERC-20 address (`0x4200…06` on Base and Optimism) for any approval step — the SDK reports the underlying as `0x000…000` for this market, which would crash if used directly.
 
 ### Compound v2 error codes
 
