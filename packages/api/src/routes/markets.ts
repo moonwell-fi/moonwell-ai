@@ -8,6 +8,7 @@ import {
 } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 import { notFound } from "../lib/errors.js";
+import { isDeprecatedMarket } from "../lib/contracts.js";
 
 const READ_CACHE_SECONDS = 30;
 
@@ -17,12 +18,18 @@ function utilization(m: Pick<Market, "totalSupplyUsd" | "totalBorrowsUsd">): num
   return m.totalSupplyUsd > 0 ? m.totalBorrowsUsd / m.totalSupplyUsd : 0;
 }
 
-function marketToJson(m: Market): Record<string, unknown> {
+function marketToJson(m: Market, chainId: number): Record<string, unknown> {
   return {
     asset: m.underlyingToken.symbol,
     assetAddress: m.underlyingToken.address,
     mToken: m.marketToken.symbol,
     mTokenAddress: m.marketToken.address,
+    /**
+     * True for legacy/wind-down markets like Base mUSDbC. The symbol can
+     * still collide with the canonical market (both report `mUSDC`), so
+     * downstream consumers should filter on this rather than the symbol.
+     */
+    deprecated: isDeprecatedMarket(chainId, m.marketToken.address),
     baseSupplyApy: m.baseSupplyApy,
     baseBorrowApy: m.baseBorrowApy,
     totalSupplyApr: m.totalSupplyApr,
@@ -79,9 +86,13 @@ markets.get("/", async (c) => {
       filtered = filtered.slice(0, limit);
     }
 
-    return ok(c, "markets", chain.chainId, filtered.map(marketToJson), {
-      cacheSeconds: READ_CACHE_SECONDS,
-    });
+    return ok(
+      c,
+      "markets",
+      chain.chainId,
+      filtered.map((m) => marketToJson(m, chain.chainId)),
+      { cacheSeconds: READ_CACHE_SECONDS },
+    );
   } catch (err) {
     return fail(c, "markets", chainId, err);
   }
@@ -122,7 +133,7 @@ markets.get("/:id", async (c) => {
       );
     }
 
-    return ok(c, "markets", chain.chainId, marketToJson(market), {
+    return ok(c, "markets", chain.chainId, marketToJson(market, chain.chainId), {
       cacheSeconds: READ_CACHE_SECONDS,
     });
   } catch (err) {

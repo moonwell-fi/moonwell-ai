@@ -52,3 +52,30 @@ export function getWethAddress(chainId: number): Address {
 
 export const ZERO_ADDRESS: Address =
   "0x0000000000000000000000000000000000000000";
+
+/**
+ * mToken addresses flagged as deprecated. Routes expose a `deprecated: true`
+ * flag on these so clients can filter them out of default selections.
+ *
+ * Addresses are stored lowercased so callers don't need to checksum-match.
+ *
+ * Currently: Base mUSDbC (legacy bridged-USDC market). It still resolves
+ * because Coinbase deprecated the bridged USDbC token in favor of canonical
+ * USDC, and the Moonwell market sticks around for existing positions to
+ * unwind.
+ */
+export const DEPRECATED_MARKETS: Record<number, ReadonlySet<string>> = {
+  8453: new Set<string>([
+    "0x703843c3379b52f9ff486c9f5892218d2a065cc8", // mUSDbC
+  ]),
+  10: new Set<string>(),
+};
+
+export function isDeprecatedMarket(
+  chainId: number,
+  mTokenAddress: string,
+): boolean {
+  return Boolean(
+    DEPRECATED_MARKETS[chainId]?.has(mTokenAddress.toLowerCase()),
+  );
+}
