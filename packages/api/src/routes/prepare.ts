@@ -24,7 +24,13 @@ const QUERY_FIELDS = [
 
 // Reshape query-string params into the same flat object that
 // `parsePrepareBody` validates, so GET and POST share validation.
-// `simulate` is a boolean in JSON bodies but a string in query params.
+//
+// `simulate` gets validated here (string "true"/"false") rather than via
+// `parsePrepareBody` (which expects a boolean). Two error messages for
+// the same field, by design: query-string callers see "expected 'true'
+// or 'false'", JSON-body callers see "must be a boolean". The split
+// avoids quietly coercing strings to booleans inside parsePrepareBody
+// (which would mask malformed JSON inputs like `simulate: "true"`).
 function bodyFromQuery(query: (name: string) => string | undefined): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const k of QUERY_FIELDS) {

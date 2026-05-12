@@ -62,9 +62,10 @@ Custom classes like `.cursor-blink` are defined as plain CSS in `globals.css` �
 Dark-only. No light mode.
 
 ### skill.md serving
-`public/skill.md` is a static copy of `packages/skill/SKILL.md`. Next.js serves it directly at `/skill.md` — no route handler. If you update the skill definition, copy it over:
+`public/skill.md` is a static copy of `packages/skill/SKILL.md`. Next.js serves it directly at `/skill.md` — no route handler. The copy is handled by the same sync script that mirrors `packages/cli/src/lib/` into `packages/api/src/lib/`:
 ```bash
-cp packages/skill/SKILL.md packages/web/public/skill.md
+pnpm sync-shared          # copies SKILL.md → public/skill.md too
+pnpm sync-shared --check  # CI guard against drift
 ```
 The old dynamic route (`src/app/skill.md/route.ts`) was deleted — do not recreate it.
 
