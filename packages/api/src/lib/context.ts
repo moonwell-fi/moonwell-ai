@@ -99,9 +99,12 @@ interface PrepareBody {
 }
 
 // Tight regexes pin start-to-end, so they forbid scientific notation, sign,
-// whitespace, and leading zeros (other than the single-char "0").
-const POSITIVE_INTEGER_STR = /^(0|[1-9]\d*)$/;
-const POSITIVE_DECIMAL_STR = /^(0|[1-9]\d*)(\.\d+)?$/;
+// whitespace, and leading zeros. Strictly positive — zero is rejected
+// because a zero-value supply/borrow/repay tx builds a real on-chain call
+// that would pay gas for no movement. If you ever need approval-only or
+// other zero-amount flows, expose a separate `dryRun` style param instead.
+const POSITIVE_INTEGER_STR = /^[1-9]\d*$/;
+const POSITIVE_DECIMAL_STR = /^([1-9]\d*(\.\d+)?|0\.\d*[1-9]\d*)$/;
 
 export function parsePrepareBody(
   body: unknown,

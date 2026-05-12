@@ -117,9 +117,32 @@ describe("prepare body validation — hardened inputs", () => {
     ).toThrow(/amount/);
   });
 
-  it("accepts '0' as a valid amount string", () => {
-    const parsed = parsePrepareBody({ ...valid, amount: "0" });
-    expect(parsed.amount).toBe("0");
+  it("rejects amount: '0' (zero-value tx is a footgun)", () => {
+    expect(() => parsePrepareBody({ ...valid, amount: "0" })).toThrow(
+      /amount/,
+    );
+  });
+
+  it("rejects amountDecimal: '0'", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amountDecimal: "0" }),
+    ).toThrow(/amountDecimal/);
+  });
+
+  it("rejects amountDecimal: '0.0'", () => {
+    expect(() =>
+      parsePrepareBody({ ...valid, amountDecimal: "0.0" }),
+    ).toThrow(/amountDecimal/);
+  });
+
+  it("accepts amountDecimal: '0.5' (less than one whole unit)", () => {
+    const parsed = parsePrepareBody({ ...valid, amountDecimal: "0.5" });
+    expect(parsed.amountDecimal).toBe("0.5");
+  });
+
+  it("accepts amountDecimal: '0.000001' (smallest USDC unit)", () => {
+    const parsed = parsePrepareBody({ ...valid, amountDecimal: "0.000001" });
+    expect(parsed.amountDecimal).toBe("0.000001");
   });
 
   it("rejects both amount and amountDecimal together", () => {

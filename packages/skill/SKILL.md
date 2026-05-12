@@ -85,8 +85,8 @@ Verbs: `supply`, `withdraw`, `borrow`, `repay`. Body / query fields:
 |---|---|---|
 | `chain` | string? | Defaults to `base`. Accepts `base` / `optimism` / chain ID |
 | `asset` | string | Underlying symbol, e.g. `USDC`, `WETH` (`ETH` is an alias for `WETH`) |
-| `amount` | string | Base units (e.g. `"1000000"` for 1 USDC). Use this **or** `amountDecimal`, never both. |
-| `amountDecimal` | string | Human-readable decimal (e.g. `"1.0"`). Use this **or** `amount`, never both. Scientific notation and JSON numbers are rejected. |
+| `amount` | string | Base units (e.g. `"1000000"` for 1 USDC). Use this **or** `amountDecimal`, never both. Must be strictly positive — `"0"` is rejected. |
+| `amountDecimal` | string | Human-readable decimal (e.g. `"1.0"`). Use this **or** `amount`, never both. Must be strictly positive — `"0"`/`"0.0"` are rejected. Scientific notation and JSON numbers are rejected. |
 | `from` | string | 0x-prefixed sender address |
 | `poolAddress` | string? | Override mToken (auto-resolved when omitted) |
 | `simulate` | boolean? | Defaults `true`; first-step gas estimate via `eth_estimateGas` |
