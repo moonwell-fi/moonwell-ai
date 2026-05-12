@@ -1,7 +1,78 @@
 import { describe, it, expect } from "vitest";
 import type { Address, PublicClient, Transport, Chain } from "viem";
 import { toBaseUnits } from "../lib/amount.js";
-import { prepareLendAction } from "../lib/prepare.js";
+import {
+  prepareLendAction,
+  resolveAssetForLend,
+  type MarketForResolution,
+} from "../lib/prepare.js";
+
+const FAKE_BASE_USDC: MarketForResolution = {
+  underlyingToken: {
+    symbol: "USDC",
+    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    decimals: 6,
+  },
+  marketToken: {
+    symbol: "mUSDC",
+    address: "0xEdc817A28E8B93B03976FBd4a3dDBc9f7D176c22",
+  },
+};
+
+const FAKE_BASE_ETH: MarketForResolution = {
+  // The SDK reports the mWETH market's underlying as "ETH" with the zero
+  // address. resolveAssetForLend must rewrite this for on-chain use.
+  underlyingToken: {
+    symbol: "ETH",
+    address: "0x0000000000000000000000000000000000000000",
+    decimals: 18,
+  },
+  marketToken: {
+    symbol: "mWETH",
+    address: "0x628ff693426583D9a7FB391E54366292F509D457",
+  },
+};
+
+describe("resolveAssetForLend", () => {
+  const markets = [FAKE_BASE_USDC, FAKE_BASE_ETH];
+
+  it("resolves USDC to its canonical address", () => {
+    const r = resolveAssetForLend(markets, 8453, "USDC", "Base");
+    expect(r.assetAddress).toBe(
+      "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    );
+    expect(r.assetSymbol).toBe("USDC");
+    expect(r.assetDecimals).toBe(6);
+  });
+
+  it("accepts case-insensitive symbol", () => {
+    expect(
+      resolveAssetForLend(markets, 8453, "usdc", "Base").assetSymbol,
+    ).toBe("USDC");
+  });
+
+  it("asset=ETH swaps zero address for the WETH ERC-20 predeploy", () => {
+    const r = resolveAssetForLend(markets, 8453, "ETH", "Base");
+    expect(r.assetAddress.toLowerCase()).toBe(
+      "0x4200000000000000000000000000000000000006",
+    );
+    expect(r.assetSymbol).toBe("WETH");
+  });
+
+  it("asset=WETH (alias) resolves to the same ETH market with real WETH address", () => {
+    const r = resolveAssetForLend(markets, 8453, "WETH", "Base");
+    expect(r.assetAddress.toLowerCase()).toBe(
+      "0x4200000000000000000000000000000000000006",
+    );
+    expect(r.assetSymbol).toBe("WETH");
+  });
+
+  it("throws USAGE when asset is not in markets", () => {
+    expect(() =>
+      resolveAssetForLend(markets, 8453, "FAKE", "Base"),
+    ).toThrow(/Asset "FAKE" not found/);
+  });
+});
 
 describe("prepare transaction structure", () => {
   it("supply amount encoding is correct for USDC (6 decimals)", () => {

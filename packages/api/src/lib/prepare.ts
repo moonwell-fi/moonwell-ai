@@ -1,12 +1,14 @@
 import {
   encodeFunctionData,
+  getAddress,
   type Address,
   type PublicClient,
   type Transport,
   type Chain,
 } from "viem";
 import { mTokenAbi, comptrollerAbi, erc20Abi } from "./abis.js";
-import { getContracts } from "./contracts.js";
+import { getContracts, getWethAddress, ZERO_ADDRESS } from "./contracts.js";
+import { usage } from "./errors.js";
 import type {
   LendVerb,
   Precondition,
@@ -15,6 +17,86 @@ import type {
   SimulationResult,
 } from "./types.js";
 import { caip2 } from "./chains.js";
+
+/**
+ * Minimal subset of the SDK's Market type we touch here. Avoids a hard
+ * dependency on @moonwell-fi/moonwell-sdk inside the shared lib (the API
+ * worker, CLI, and tests can all construct conforming objects).
+ */
+export interface MarketForResolution {
+  underlyingToken: {
+    symbol: string;
+    address: string;
+    decimals: number;
+  };
+  marketToken: { symbol: string; address: string };
+  /** Optional — passed through as `estimatedAPY` in PrepareResult.preview. */
+  baseSupplyApy?: number;
+}
+
+export interface ResolvedAsset {
+  /** The SDK market row that matched. */
+  market: MarketForResolution;
+  /**
+   * On-chain ERC-20 address to use for allowance / approve. For the
+   * mWETH market the SDK reports 0x000…0 here; we swap in the chain's
+   * real WETH predeploy so viem doesn't crash trying to call allowance
+   * on the zero address.
+   */
+  assetAddress: Address;
+  assetDecimals: number;
+  /**
+   * Display symbol. Normalized to "WETH" when the caller passed "ETH"
+   * or when the matched market is the SDK's "ETH" row, so warnings and
+   * preview text are unambiguous downstream.
+   */
+  assetSymbol: string;
+}
+
+/**
+ * Resolve the SDK market for a user-supplied asset symbol, applying the
+ * WETH/ETH alias and the zero-address swap so both CLI and API agree on
+ * what `--asset WETH` / `?asset=ETH` mean.
+ *
+ * Throws USAGE if no market matches.
+ */
+export function resolveAssetForLend(
+  markets: readonly MarketForResolution[],
+  chainId: number,
+  requestedAsset: string,
+  chainName: string,
+): ResolvedAsset {
+  const askedFor = requestedAsset.toUpperCase();
+  // The SDK lists Moonwell's mWETH market as `underlyingToken.symbol = "ETH"`.
+  // Accept both `WETH` and `ETH` from callers; both resolve to the same row.
+  const matchSymbol = askedFor === "WETH" ? "ETH" : askedFor;
+
+  const market = markets.find(
+    (m) => m.underlyingToken.symbol.toUpperCase() === matchSymbol,
+  );
+  if (!market) {
+    throw usage(
+      `Asset "${requestedAsset}" not found in Moonwell markets on ${chainName}`,
+    );
+  }
+
+  const sdkAssetAddr = getAddress(market.underlyingToken.address) as Address;
+  const isWethMarket = matchSymbol === "ETH";
+  // The SDK returns 0x000…0 for the mWETH market's underlying. On-chain
+  // allowance/approve calls must target the real WETH ERC-20 contract.
+  const assetAddress: Address =
+    isWethMarket && sdkAssetAddr.toLowerCase() === ZERO_ADDRESS.toLowerCase()
+      ? getWethAddress(chainId)
+      : sdkAssetAddr;
+  const assetSymbol = isWethMarket ? "WETH" : market.underlyingToken.symbol;
+
+  return {
+    market,
+    assetAddress,
+    assetDecimals: market.underlyingToken.decimals,
+    assetSymbol,
+  };
+}
 
 interface PrepareParams {
   verb: LendVerb;

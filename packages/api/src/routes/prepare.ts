@@ -4,10 +4,9 @@ import type { Env } from "../env.js";
 import { setupChain, parsePrepareBody } from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 import { resolveMToken } from "../lib/mtoken-resolver.js";
-import { prepareLendAction } from "../lib/prepare.js";
+import { prepareLendAction, resolveAssetForLend } from "../lib/prepare.js";
 import { toBaseUnits, toDecimal } from "../lib/amount.js";
 import { usage } from "../lib/errors.js";
-import { getWethAddress, ZERO_ADDRESS } from "../lib/contracts.js";
 import type { LendVerb } from "../lib/types.js";
 
 const prepare = new Hono<{ Bindings: Env }>();
@@ -52,37 +51,8 @@ async function runPrepare(env: Env, verbParam: string, body: unknown) {
 
   const markets = await sdkClient.getMarkets({ chainId: chain.chainId });
 
-  const askedFor = parsed.asset.toUpperCase();
-  // The SDK lists Moonwell's mWETH market as `underlyingToken.symbol = "ETH"`.
-  // Accept both `WETH` and `ETH` from callers; both resolve to the same row.
-  const matchSymbol = askedFor === "WETH" ? "ETH" : askedFor;
-
-  const market = markets.find(
-    (m) => m.underlyingToken.symbol.toUpperCase() === matchSymbol,
-  );
-  if (!market) {
-    throw usage(
-      `Asset "${parsed.asset}" not found in Moonwell markets on ${chain.name}`,
-    );
-  }
-
-  const sdkAssetAddr = getAddress(market.underlyingToken.address) as Address;
-  // The SDK returns 0x000…0 for the mWETH market's underlying. On-chain
-  // allowance/approve calls must target the real WETH ERC-20 contract,
-  // otherwise viem will crash trying to readContract() against the zero
-  // address. Substitute the chain's WETH predeploy here.
-  const isWethMarket = matchSymbol === "ETH";
-  const assetAddress: Address =
-    isWethMarket && sdkAssetAddr.toLowerCase() === ZERO_ADDRESS.toLowerCase()
-      ? getWethAddress(chain.chainId)
-      : sdkAssetAddr;
-  const assetDecimals = market.underlyingToken.decimals as number;
-  // Keep the symbol stable as "WETH" downstream so warnings + responses are
-  // unambiguous; the SDK's "ETH" is misleading because users must hold the
-  // ERC-20 WETH (not native ETH) for supply/repay.
-  const assetSymbol = isWethMarket
-    ? "WETH"
-    : (market.underlyingToken.symbol as string);
+  const { market, assetAddress, assetDecimals, assetSymbol } =
+    resolveAssetForLend(markets, chain.chainId, parsed.asset, chain.name);
 
   let amount: bigint;
   let amountDecimal: string;
