@@ -48,6 +48,25 @@ export function parsePositiveInt(value: string | undefined, name: string): numbe
   return n;
 }
 
+/**
+ * Accept only values in `allowed`. Returns the value (with `defaultValue`
+ * applied) or throws USAGE listing the legal options. Use for any query-
+ * param enum so unknown inputs fail loudly instead of silently falling
+ * back to a default the caller didn't expect.
+ */
+export function parseEnumQuery<T extends string>(
+  value: string | undefined,
+  name: string,
+  allowed: readonly T[],
+  defaultValue: T,
+): T {
+  if (value === undefined) return defaultValue;
+  if ((allowed as readonly string[]).includes(value)) return value as T;
+  throw usage(
+    `Invalid ${name}: "${value}" (supported: ${allowed.join(", ")})`,
+  );
+}
+
 /** Parse an optional non-negative float query param. Throws on bad input. */
 export function parseNonNegativeFloat(value: string | undefined, name: string): number | undefined {
   if (value === undefined) return undefined;

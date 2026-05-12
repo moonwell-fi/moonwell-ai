@@ -1,7 +1,11 @@
 import { Hono } from "hono";
 import type { Market } from "@moonwell-fi/moonwell-sdk";
 import type { Env } from "../env.js";
-import { setupChain, parsePositiveInt } from "../lib/context.js";
+import {
+  setupChain,
+  parsePositiveInt,
+  parseEnumQuery,
+} from "../lib/context.js";
 import { ok, fail } from "../lib/respond.js";
 import { notFound } from "../lib/errors.js";
 
@@ -37,7 +41,12 @@ markets.get("/", async (c) => {
   try {
     // Validate inputs before touching RPC — fail fast on bad params.
     const limit = parsePositiveInt(c.req.query("limit"), "limit");
-    const sortKey = c.req.query("sort") ?? "tvl";
+    const sortKey = parseEnumQuery(
+      c.req.query("sort"),
+      "sort",
+      ["tvl", "supply-apy", "borrow-apy"] as const,
+      "tvl",
+    );
     const asset = c.req.query("asset");
 
     const { chain, sdkClient } = setupChain(c.env, c.req.query("chain"));
@@ -61,7 +70,7 @@ markets.get("/", async (c) => {
           return b.baseSupplyApy - a.baseSupplyApy;
         case "borrow-apy":
           return a.baseBorrowApy - b.baseBorrowApy;
-        default:
+        case "tvl":
           return b.totalSupplyUsd - a.totalSupplyUsd;
       }
     });

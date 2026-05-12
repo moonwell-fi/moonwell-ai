@@ -78,6 +78,29 @@ describe("validation — bad query params 400, no RPC needed", () => {
     const body = await asJson(res);
     expect(body.error).toContain("Unsupported chain");
   });
+
+  it("/v1/yield?sort=garbage returns 400 with valid sort list", async () => {
+    const res = await app.request(
+      "/v1/yield?sort=garbage&chain=base",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson<{ error: string }>(res);
+    expect(body.error).toMatch(/sort/i);
+    expect(body.error).toMatch(/apy|tvl/);
+  });
+
+  it("/v1/markets?sort=garbage returns 400 with valid sort list", async () => {
+    const res = await app.request(
+      "/v1/markets?sort=garbage&chain=base",
+      undefined,
+      ENV,
+    );
+    expect(res.status).toBe(400);
+    const body = await asJson<{ error: string }>(res);
+    expect(body.error).toMatch(/sort/i);
+  });
 });
 
 describe("/v1/prepare/:verb — chain default", () => {
