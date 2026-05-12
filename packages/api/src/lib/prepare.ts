@@ -50,6 +50,13 @@ export async function prepareLendAction(
   const transactions: UnsignedTx[] = [];
   const requirements: string[] = [];
   const warnings: string[] = [];
+  // Both `ETH` (SDK's symbol for the mWETH market) and `WETH` (the actual
+  // ERC-20 symbol) need the wrap/unwrap warning. The route handler
+  // substitutes the real WETH ERC-20 address when the SDK returns the
+  // zero address for the underlying, so by the time we get here the
+  // approval target is the WETH contract — but the warning is still owed.
+  const isWethMarket =
+    asset.toUpperCase() === "WETH" || asset.toUpperCase() === "ETH";
 
   switch (verb) {
     case "supply": {
@@ -90,7 +97,7 @@ export async function prepareLendAction(
 
       requirements.push(`Sufficient ${asset} balance`, `Gas for ${transactions.length} transaction(s)`);
 
-      if (asset.toUpperCase() === "WETH") {
+      if (isWethMarket) {
         warnings.push(
           "WETH supply requires wrapping native ETH first. Moonwell mWETH uses the ERC-20 WETH path.",
         );
@@ -118,7 +125,7 @@ export async function prepareLendAction(
         "Gas for 1 transaction",
       );
 
-      if (asset.toUpperCase() === "WETH") {
+      if (isWethMarket) {
         warnings.push(
           "Moonwell mWETH auto-unwraps to native ETH on withdraw. You will receive ETH, not WETH.",
         );
@@ -147,7 +154,7 @@ export async function prepareLendAction(
         "Gas for 1 transaction",
       );
 
-      if (asset.toUpperCase() === "WETH") {
+      if (isWethMarket) {
         warnings.push(
           "Moonwell mWETH auto-unwraps to native ETH on borrow. You will receive ETH, not WETH.",
         );
@@ -184,7 +191,7 @@ export async function prepareLendAction(
 
       requirements.push(`Sufficient ${asset} balance`, `Gas for ${transactions.length} transaction(s)`);
 
-      if (asset.toUpperCase() === "WETH") {
+      if (isWethMarket) {
         warnings.push(
           "WETH repay requires wrapping native ETH first. Moonwell mWETH uses the ERC-20 WETH path.",
         );

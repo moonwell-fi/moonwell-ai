@@ -27,3 +27,28 @@ export function getContracts(chainId: number): ChainContracts {
   }
   return contracts;
 }
+
+/**
+ * Canonical WETH ERC-20 addresses per chain. Both Base and Optimism use the
+ * Superchain WETH predeploy at 0x42…06.
+ *
+ * Moonwell's mWETH market reports `underlyingToken.symbol = "ETH"` and
+ * `address = 0x000…000` via the SDK — but on-chain approvals must target
+ * the real ERC-20 contract. Use this table when the SDK underlying is the
+ * zero address.
+ */
+export const WETH_ADDRESSES: Record<number, Address> = {
+  8453: "0x4200000000000000000000000000000000000006",
+  10: "0x4200000000000000000000000000000000000006",
+};
+
+export function getWethAddress(chainId: number): Address {
+  const addr = WETH_ADDRESSES[chainId];
+  if (!addr) {
+    throw new Error(`No WETH address known for chain ${chainId}`);
+  }
+  return addr;
+}
+
+export const ZERO_ADDRESS: Address =
+  "0x0000000000000000000000000000000000000000";

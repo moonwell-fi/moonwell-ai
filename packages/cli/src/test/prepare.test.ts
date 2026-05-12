@@ -73,14 +73,70 @@ describe("UnsignedTx.value formatting (EIP-5792)", () => {
   });
 });
 
-describe("WETH warning detection", () => {
-  it("detects WETH asset for warning", () => {
-    const asset = "WETH";
-    expect(asset.toUpperCase() === "WETH").toBe(true);
+describe("WETH/ETH warning emission", () => {
+  it("emits WETH warning when asset='WETH'", async () => {
+    const viemClient = mockViemClient({
+      allowance: 2n ** 256n - 1n,
+      isMember: true,
+      gas: 200_000n,
+    });
+    const result = await prepareLendAction({
+      verb: "supply",
+      chainId: 8453,
+      asset: "WETH",
+      assetAddress: "0x4200000000000000000000000000000000000006",
+      assetDecimals: 18,
+      amount: 1_000_000_000_000_000n,
+      amountDecimal: "0.001",
+      from: DEAD,
+      mToken: "0x628ff693426583D9a7FB391E54366292F509D457",
+      viemClient,
+      simulate: false,
+    });
+    expect(result.warnings.some((w) => /WETH|wrap/i.test(w))).toBe(true);
   });
 
-  it("does not trigger for non-WETH", () => {
-    const asset = "USDC";
-    expect(asset.toUpperCase() === "WETH").toBe(false);
+  it("emits WETH warning when asset='ETH' (SDK's symbol for mWETH market)", async () => {
+    const viemClient = mockViemClient({
+      allowance: 2n ** 256n - 1n,
+      isMember: true,
+      gas: 200_000n,
+    });
+    const result = await prepareLendAction({
+      verb: "supply",
+      chainId: 8453,
+      asset: "ETH",
+      assetAddress: "0x4200000000000000000000000000000000000006",
+      assetDecimals: 18,
+      amount: 1_000_000_000_000_000n,
+      amountDecimal: "0.001",
+      from: DEAD,
+      mToken: "0x628ff693426583D9a7FB391E54366292F509D457",
+      viemClient,
+      simulate: false,
+    });
+    expect(result.warnings.some((w) => /WETH|wrap/i.test(w))).toBe(true);
+  });
+
+  it("does not emit WETH warning for USDC", async () => {
+    const viemClient = mockViemClient({
+      allowance: 2n ** 256n - 1n,
+      isMember: true,
+      gas: 200_000n,
+    });
+    const result = await prepareLendAction({
+      verb: "supply",
+      chainId: 8453,
+      asset: "USDC",
+      assetAddress: USDC,
+      assetDecimals: 6,
+      amount: 1_000_000n,
+      amountDecimal: "1",
+      from: DEAD,
+      mToken: M_USDC,
+      viemClient,
+      simulate: false,
+    });
+    expect(result.warnings.some((w) => /WETH/.test(w))).toBe(false);
   });
 });

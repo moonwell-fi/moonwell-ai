@@ -250,6 +250,37 @@ describe("GET /v1/prepare/:verb (query-param mode)", () => {
   });
 });
 
+describe("/v1/prepare/* — WETH/ETH alias", () => {
+  // We can't drive the full request to success without a working RPC, but we
+  // CAN prove that the validator + lookup path no longer reject these inputs
+  // with the legacy errors (the bug). On a working RPC the error would be
+  // 503 or 200; on this dummy RPC it's an upstream fetch failure — either
+  // way the response error MUST NOT be the old "Asset \"WETH\" not found".
+  it("asset=WETH no longer fails with 'not found' on validation", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?chain=base&asset=WETH&amountDecimal=0.001&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    expect(body.error ?? "").not.toMatch(/Asset "WETH" not found/);
+  });
+
+  it("asset=ETH reaches the SDK lookup (no 'not found' on validation)", async () => {
+    const res = await app.request(
+      "/v1/prepare/supply?chain=base&asset=ETH&amountDecimal=0.001&from=0x000000000000000000000000000000000000dEaD",
+      undefined,
+      ENV,
+    );
+    const body = await asJson<{ error?: string }>(res);
+    // Old failure mode was "Asset \"ETH\" not found" (when the SDK didn't
+    // expose ETH symbol) or an unwrapped allowance() crash on 0x000.
+    // Either is fixed; whatever upstream RPC error remains must NOT be
+    // either of those.
+    expect(body.error ?? "").not.toMatch(/Asset .* not found/);
+  });
+});
+
 describe("404 + envelope shape", () => {
   it("unknown path returns 404 with hint", async () => {
     const res = await app.request("/v1/does-not-exist", undefined, ENV);
