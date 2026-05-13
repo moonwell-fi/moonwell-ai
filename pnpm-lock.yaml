@@ -9,84 +9,84 @@ importers:
   .:
     devDependencies:
       '@changesets/changelog-github':
-        specifier: ^0.5.0
+        specifier: 0.5.2
         version: 0.5.2
       '@changesets/cli':
-        specifier: ^2.27.10
+        specifier: 2.31.0
         version: 2.31.0(@types/node@22.19.17)
       wrangler:
-        specifier: ^3.90.0
+        specifier: 3.114.17
         version: 3.114.17(@cloudflare/workers-types@4.20260504.1)
 
   packages/api:
     dependencies:
       '@moonwell-fi/moonwell-sdk':
-        specifier: ^0.9.0
+        specifier: 0.9.34
         version: 0.9.34(@metamask/delegation-toolkit@0.11.0(viem@2.47.12(typescript@5.9.3)(zod@4.3.6)))(@noble/curves@1.9.1)(@openzeppelin/merkle-tree@1.0.8)(@safe-global/types-kit@3.0.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       hono:
-        specifier: ^4.6.0
+        specifier: 4.12.16
         version: 4.12.16
       viem:
-        specifier: ^2.23.0
+        specifier: 2.47.12
         version: 2.47.12(typescript@5.9.3)(zod@4.3.6)
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20251101.0
+        specifier: 4.20260504.1
         version: 4.20260504.1
       '@types/node':
-        specifier: ^22.15.3
+        specifier: 22.19.17
         version: 22.19.17
       typescript:
-        specifier: ^5.8.3
+        specifier: 5.9.3
         version: 5.9.3
       vitest:
-        specifier: ^3.1.2
+        specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)
 
   packages/cli:
     dependencies:
       '@moonwell-fi/moonwell-sdk':
-        specifier: ^0.9.0
+        specifier: 0.9.34
         version: 0.9.34(@metamask/delegation-toolkit@0.11.0(viem@2.47.12(typescript@5.9.3)(zod@4.3.6)))(@noble/curves@1.9.1)(@openzeppelin/merkle-tree@1.0.8)(@safe-global/types-kit@3.0.0(typescript@5.9.3)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       chalk:
-        specifier: ^5.4.1
+        specifier: 5.6.2
         version: 5.6.2
       commander:
-        specifier: ^13.1.0
+        specifier: 13.1.0
         version: 13.1.0
       ora:
-        specifier: ^8.2.0
+        specifier: 8.2.0
         version: 8.2.0
       viem:
-        specifier: ^2.23.0
+        specifier: 2.47.12
         version: 2.47.12(typescript@5.9.3)(zod@4.3.6)
     devDependencies:
       '@types/node':
-        specifier: ^22.15.3
+        specifier: 22.19.17
         version: 22.19.17
       tsup:
-        specifier: ^8.4.0
+        specifier: 8.5.1
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.9)(tsx@4.21.0)(typescript@5.9.3)
       tsx:
-        specifier: ^4.19.4
+        specifier: 4.21.0
         version: 4.21.0
       typescript:
-        specifier: ^5.8.3
+        specifier: 5.9.3
         version: 5.9.3
       vitest:
-        specifier: ^3.1.2
+        specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@22.19.17)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)
 
   packages/web:
     dependencies:
       '@react-three/fiber':
-        specifier: ^9.6.0
+        specifier: 9.6.0
         version: 9.6.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.184.0)
       framer-motion:
-        specifier: ^12.38.0
+        specifier: 12.38.0
         version: 12.38.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 1.8.0
         version: 1.8.0(react@19.2.4)
       next:
         specifier: 16.2.3
@@ -98,35 +98,35 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
       three:
-        specifier: ^0.184.0
+        specifier: 0.184.0
         version: 0.184.0
     devDependencies:
       '@tailwindcss/postcss':
-        specifier: ^4
+        specifier: 4.2.2
         version: 4.2.2
       '@types/node':
-        specifier: ^20
+        specifier: 20.19.39
         version: 20.19.39
       '@types/react':
-        specifier: ^19
+        specifier: 19.2.14
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19
+        specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.14)
       '@types/three':
-        specifier: ^0.184.0
+        specifier: 0.184.0
         version: 0.184.0
       eslint:
-        specifier: ^9
+        specifier: 9.39.4
         version: 9.39.4(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.2.3
         version: 16.2.3(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
-        specifier: ^4
+        specifier: 4.2.2
         version: 4.2.2
       typescript:
-        specifier: ^5
+        specifier: 5.9.3
         version: 5.9.3
 
 packages:
@@ -1164,7 +1164,6 @@ packages:
 
   '@rhinestone/module-sdk@0.2.7':
     resolution: {integrity: sha512-clZVB6erRdkDpaYodFsRVhU+Sj4immytLWK76jL9MsjnBg9vDEEMK3izUpsGax6YLDI0/QTrn0sW0qyhLz8fBQ==}
-    deprecated: This SDK is no longer supported. Please switch to '@rhinestone/sdk' to continue getting updates.
     peerDependencies:
       viem: ^2.0.0
 
@@ -5739,8 +5738,8 @@ snapshots:
       '@next/eslint-plugin-next': 16.2.3
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-react-hooks: 7.0.1(eslint@9.39.4(jiti@2.6.1))
@@ -5762,7 +5761,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3
@@ -5773,22 +5772,22 @@ snapshots:
       tinyglobby: 0.2.16
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -5799,7 +5798,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
