@@ -12,7 +12,7 @@ Three packages:
 ## First 5 minutes
 
 ```bash
-pnpm install
+pnpm run setup        # = pnpm install --frozen-lockfile && pnpm run allow-scripts
 
 # Web dev server
 pnpm dev:web          # localhost:3000
@@ -26,6 +26,20 @@ npx vitest run
 # Full build
 pnpm build
 ```
+
+## Supply-chain guardrails (read before adding deps)
+
+`.npmrc` sets `ignore-scripts=true` — **no** dep's preinstall / install / postinstall / prepare runs on `pnpm install`. Legitimate native-binary deps are listed in `package.json#lifecycleScriptAllowlist` and re-enabled by `pnpm run allow-scripts` (also runs the root `prepare` hook, so husky gets wired up).
+
+- Fresh clone or fresh install → `pnpm run setup`.
+- Adding a dep → `pnpm add <pkg>` works, but its install scripts won't fire. If it legitimately needs them (native binary, codegen), add its name to `lifecycleScriptAllowlist` and re-run `pnpm run allow-scripts`. Keep this list small.
+- Committing a `pnpm-lock.yaml` change → the pre-commit hook (`scripts/check-lockfile-cooling-off.mjs`) blocks any newly introduced `name@version` published in the last 72h. Override only for verified emergency hotfixes:
+  ```bash
+  COOLING_OFF_OVERRIDE=1 git commit ...
+  COOLING_OFF_HOURS=24 git commit ...   # tune the window
+  ```
+
+Why both layers: a malicious npm version (TanStack-style) can land via Renovate before the registry catches it. The cooling-off blocks it at commit time; `ignore-scripts` neuters install-time code-exec even if a poisoned version slips through.
 
 ## Package agent guides
 

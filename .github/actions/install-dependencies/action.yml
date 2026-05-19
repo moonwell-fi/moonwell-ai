@@ -18,3 +18,7 @@ runs:
     - name: Install
       shell: bash
       run: pnpm install --frozen-lockfile
+
+    - name: Allow scripts (run lifecycle scripts only for allowlisted native deps)
+      shell: bash
+      run: pnpm run allow-scripts
